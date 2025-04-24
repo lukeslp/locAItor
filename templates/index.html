@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>📍 Where Was This Photo Taken?</title>
+  <link rel="icon" href="data:,">
+  <!-- Open Sans font -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- markdown-it for rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Open Sans', sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem 1rem;
+      padding: 1.5rem;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    #dropZone {
+      border: 2px dashed #bbb;
+      padding: 2rem;
+      border-radius: 8px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    #dropZone.dragover {
+      border-color: #888;
+      background: #eef;
+    }
+    #preview {
+      margin-top: 1.5rem;
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #result {
+      margin-top: 1.5rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+      text-align: left;
+      font-family: 'Open Sans', sans-serif;
+      white-space: normal;
+      font-size: 1.25rem;
+    }
+    #result p {
+      margin: 0.3em 0;
+      line-height: 1.3;
+    }
+    #result ul, #result ol {
+      margin: 0.3em 0 0.3em 1.2em;
+      padding: 0 0 0 1.2em;
+    }
+    #result li {
+      margin: 0.1em 0;
+      line-height: 1.3;
+    }
+    #result h1, #result h2, #result h3, #result h4, #result h5, #result h6 {
+      margin: 0.5em 0 0.2em 0;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+    #result pre, #result code {
+      font-size: 1em;
+      line-height: 1.3;
+      margin: 0.2em 0;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      #dropZone {
+        padding: 1.5rem;
+      }
+      #result, #preview {
+        max-width: 100%;
+      }
+    }
+    #metaSection {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 1.1rem;
+    }
+    #metaSection h2 {
+      font-size: 1.3rem;
+    }
+    #metaContent pre {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📸 Where Was This Taken?</h1>
+    <div id="dropZone">Drag &amp; drop an image here<br>or click to choose one</div>
+    <input type="file" id="fileInput" accept="image/*"/>
+    <div id="result" aria-live="polite"></div>
+    <section id="metaSection" style="display:none; text-align:left; margin-top:1.5rem;" aria-labelledby="metaHeading">
+      <h2 id="metaHeading" style="font-size:1.2em; margin-bottom:0.5em;">Image Metadata & AI Detection</h2>
+      <div id="metaContent"></div>
+      <div id="gpsSection" style="margin-top:1em;"></div>
+      <div id="mapSection" style="margin-top:1em;"></div>
+      <details style="margin-top:1em;"><summary><strong>Raw Metadata (JSON)</strong></summary><pre id="rawMeta" style="font-size:0.95em; background:#f8f8f8; border-radius:4px; padding:0.5em;"></pre></details>
+    </section>
+    <img id="preview"/>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <script>
+    const DZ = document.getElementById('dropZone'),
+          FI = document.getElementById('fileInput'),
+          PV = document.getElementById('preview'),
+          RS = document.getElementById('result'),
+          md = window.markdownit(),
+          MS = document.getElementById('metaSection'),
+          MC = document.getElementById('metaContent'),
+          GPS = document.getElementById('gpsSection'),
+          MAP = document.getElementById('mapSection'),
+          RAW = document.getElementById('rawMeta');
+
+    DZ.onclick = () => FI.click();
+    ['dragenter','dragover'].forEach(e =>
+      DZ.addEventListener(e, ev => { ev.preventDefault(); DZ.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(e =>
+      DZ.addEventListener(e, ev => { ev.preventDefault(); DZ.classList.remove('dragover'); })
+    );
+
+    DZ.addEventListener('drop', ev => {
+      if (ev.dataTransfer.files.length) handleImage(ev.dataTransfer.files[0]);
+    });
+    FI.onchange = ev => {
+      if (ev.target.files.length) handleImage(ev.target.files[0]);
+    };
+
+    async function handleImage(file) {
+      // hide drop zone, show preview & result container
+      DZ.style.display = 'none';
+      PV.src = URL.createObjectURL(file);
+      PV.style.display = 'block';
+      RS.style.display = 'block';
+      RS.textContent   = 'Uploading and analyzing…';
+      MS.style.display = 'none';
+      MC.innerHTML     = '';
+      GPS.innerHTML    = '';
+      MAP.innerHTML    = '';
+      RAW.textContent  = '';
+
+      const form = new FormData();
+      form.append('image', file);
+
+      try {
+        const resp = await fetch('/analyze', { method:'POST', body: form });
+        const j    = await resp.json();
+        const text = j.content || j.error;
+        RS.innerHTML = md.render(text);
+
+        // --- Render metadata and AI detection results ---
+        if (j.metadata) {
+          let html = '';
+          // AI detection summary
+          html += `<div><strong>AI Generated:</strong> <span aria-live="polite">${j.metadata.ai_generated ? 'Yes' : 'No'}</span></div>`;
+          html += `<div><strong>Reason:</strong> <span>${j.metadata.ai_reason || ''}</span></div>`;
+          // EXIF
+          if (j.metadata.exif && Object.keys(j.metadata.exif).length) {
+            html += '<details><summary><strong>EXIF Metadata</strong></summary><pre>' +
+              JSON.stringify(j.metadata.exif, null, 2) + '</pre></details>';
+          }
+          // HEIC EXIF
+          if (j.metadata.heic_exif && Object.keys(j.metadata.heic_exif).length) {
+            html += '<details><summary><strong>HEIC EXIF Metadata</strong></summary><pre>' +
+              JSON.stringify(j.metadata.heic_exif, null, 2) + '</pre></details>';
+          }
+          // XMP/ICC
+          if (j.metadata.xmp_icc && (j.metadata.xmp_icc.xmp || j.metadata.xmp_icc.icc)) {
+            html += '<details><summary><strong>XMP/ICC Metadata</strong></summary><pre>' +
+              JSON.stringify(j.metadata.xmp_icc, null, 2) + '</pre></details>';
+          }
+          MC.innerHTML = html;
+          MS.style.display = 'block';
+        } else {
+          MS.style.display = 'none';
+        }
+        // --- GPS Section ---
+        if (j.gps && j.gps.lat !== undefined && j.gps.lon !== undefined) {
+          GPS.innerHTML = `<div><strong>GPS Coordinates:</strong> <span>${j.gps.lat.toFixed(6)}, ${j.gps.lon.toFixed(6)}</span></div>`;
+          // --- Map Section ---
+          MAP.innerHTML = '<div id="map" style="height:250px; border-radius:6px;"></div>';
+          setTimeout(() => {
+            if (window.L && document.getElementById('map')) {
+              let map = L.map('map').setView([j.gps.lat, j.gps.lon], 15);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+              }).addTo(map);
+              L.marker([j.gps.lat, j.gps.lon]).addTo(map)
+                .bindPopup('Detected Location').openPopup();
+            }
+          }, 100);
+        } else {
+          GPS.innerHTML = '';
+          MAP.innerHTML = '';
+        }
+        // --- Raw Metadata ---
+        RAW.textContent = JSON.stringify(j.metadata, null, 2);
+      } catch (err) {
+        RS.textContent = 'Error: ' + err.message;
+        MS.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

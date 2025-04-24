@@ -1,0 +1,8 @@
+flask
+flask-cors
+pillow
+requests
+# For HEIC/HEIF image support:
+pillow-heif
+pyheif
+piexif 
