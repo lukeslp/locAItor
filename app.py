@@ -74,34 +74,83 @@ def extract_xmp_icc(image_bytes):
         result['error'] = str(e)
     return result
 
+def extract_provenance(image_bytes, exif, xmp_icc):
+    """
+    Extract provenance info: software, creator tool, ICC desc, C2PA, etc.
+    Returns a dict of provenance fields.
+    """
+    provenance = {}
+    # EXIF Software
+    if 'Software' in exif:
+        provenance['software'] = exif['Software']
+    # XMP CreatorTool
+    if 'xmp' in xmp_icc and xmp_icc['xmp']:
+        import re
+        m = re.search(r'<xmp:CreatorTool>(.*?)</xmp:CreatorTool>', xmp_icc['xmp'])
+        if m:
+            provenance['creator_tool'] = m.group(1)
+        # C2PA/CAI signature
+        if 'c2pa.org' in xmp_icc['xmp'].lower() or 'contentauthenticity.org' in xmp_icc['xmp'].lower():
+            provenance['c2pa'] = True
+    # ICC profile description
+    if 'icc' in xmp_icc and xmp_icc['icc']:
+        provenance['icc'] = xmp_icc['icc']
+    # Thumbnail presence
+    if 'JPEGThumbnail' in exif or 'thumbnail' in exif:
+        provenance['thumbnail'] = True
+    # FileSource, SceneType, ProcessingSoftware, HostComputer
+    for tag in ['FileSource', 'SceneType', 'ProcessingSoftware', 'HostComputer']:
+        if tag in exif:
+            provenance[tag.lower()] = exif[tag]
+    return provenance
+
+# Improved AI detection logic
 AI_GENERATOR_TAGS = [
     'Stable Diffusion', 'Midjourney', 'DALL-E', 'DreamStudio', 'Craiyon',
     'AI Generated', 'Generative', 'C2PA', 'Firefly', 'Runway', 'Leonardo',
     'DeepFloyd', 'BlueWillow', 'NightCafe', 'NovelAI', 'Diffusion', 'SDXL',
-    'AI', 'Synthetic', 'AIGC', 'AIGenerated', 'AIGen', 'AIGeneratedContent'
+    'AIGC', 'AIGenerated', 'AIGen', 'AIGeneratedContent',
+    'contentauthenticity.org', 'c2pa.org'
+]
+SOFTWARE_SUSPICIOUS = [
+    'Stable Diffusion', 'Midjourney', 'DALL-E', 'AI Generated', 'Craiyon',
+    'Firefly', 'Runway', 'Leonardo', 'DeepFloyd', 'BlueWillow', 'NightCafe',
+    'NovelAI', 'Diffusion', 'SDXL', 'AIGC', 'AIGenerated', 'AIGen', 'AIGeneratedContent',
+    'contentauthenticity.org', 'c2pa.org'
 ]
 
-def detect_ai_generator(exif, xmp_icc):
+def detect_ai_generator(exif, xmp_icc, provenance):
     """
-    Returns a tuple (is_ai, reason) if AI generator is detected in metadata.
+    Improved: Only flag as AI-generated if known tags, suspicious software, or C2PA/CAI. If all metadata missing, say 'cannot determine'.
     """
-    # Check EXIF fields
+    # Check EXIF fields for known AI tags
     for k, v in exif.items():
         if any(tag.lower() in str(v).lower() for tag in AI_GENERATOR_TAGS):
             return True, f"AI generator tag found in EXIF: {k}: {v}"
     # Check XMP
-    if 'xmp' in xmp_icc:
+    if 'xmp' in xmp_icc and xmp_icc['xmp']:
         for tag in AI_GENERATOR_TAGS:
             if tag.lower() in xmp_icc['xmp'].lower():
                 return True, f"AI generator tag found in XMP: {tag}"
     # Check ICC
-    if 'icc' in xmp_icc:
-        if 'icc' in xmp_icc['icc'].lower() or 'profile' in xmp_icc['icc'].lower():
-            return False, "ICC profile present (not a strong AI indicator)"
-    # If no camera model, suspicious
-    if not exif.get('Model'):
-        return True, "No camera model in EXIF; possibly synthetic or AI-generated."
-    return False, "No AI generator tags found."
+    if 'icc' in xmp_icc and xmp_icc['icc']:
+        if any(tag.lower() in xmp_icc['icc'].lower() for tag in AI_GENERATOR_TAGS):
+            return True, f"AI generator tag found in ICC: {xmp_icc['icc']}"
+    # Check provenance for suspicious software/creator tool
+    for key in ['software', 'creator_tool']:
+        val = provenance.get(key, '')
+        if any(tag.lower() in str(val).lower() for tag in SOFTWARE_SUSPICIOUS):
+            return True, f"Suspicious software/creator tool: {val}"
+    # C2PA/CAI signature
+    if provenance.get('c2pa'):
+        return True, "C2PA/Content Authenticity signature found."
+    # If all metadata missing, cannot determine
+    if not exif and not xmp_icc and not provenance:
+        return None, "No metadata found; cannot determine if AI-generated."
+    # If no camera model, no software, no date/time, no GPS, no thumbnail, flag as 'possibly synthetic'
+    if not exif.get('Model') and not exif.get('Software') and not exif.get('DateTimeOriginal') and not exif.get('GPSInfo') and not provenance.get('thumbnail'):
+        return None, "No camera, software, date/time, GPS, or thumbnail metadata; possibly synthetic, but not conclusive."
+    return False, "No AI generator tags or suspicious provenance found."
 
 @app.route('/')
 def index():
@@ -193,13 +242,15 @@ def analyze():
     # EXIF, XMP, ICC extraction now uses processed bytes
     exif = extract_exif(raw)
     xmp_icc = extract_xmp_icc(raw)
-    is_ai, ai_reason = detect_ai_generator(exif, xmp_icc)
+    provenance = extract_provenance(raw, exif, xmp_icc)
+    is_ai, ai_reason = detect_ai_generator(exif, xmp_icc, provenance)
 
     # Merge all metadata
     all_metadata = {
         'exif': exif,
         'heic_exif': heic_exif,
         'xmp_icc': xmp_icc,
+        'provenance': provenance,
         'ai_generated': is_ai,
         'ai_reason': ai_reason
     }
@@ -207,10 +258,8 @@ def analyze():
     # GPS extraction (prefer HEIC EXIF if present)
     gps = None
     if heic_exif:
-        # Try to extract GPS from heic_exif
         gps_keys = [k for k in heic_exif if 'GPS' in k]
         if gps_keys:
-            # Not standardized, but try to find lat/lon
             gps = {k: heic_exif[k] for k in gps_keys}
     if not gps:
         gps = parse_gps(exif)
@@ -228,6 +277,9 @@ def analyze():
         parts.append(f"GPS: {gps_coords['lat']:.6f}, {gps_coords['lon']:.6f}")
     if 'xmp' in xmp_icc: parts.append("XMP metadata present")
     if 'icc' in xmp_icc: parts.append("ICC profile present")
+    if provenance.get('software'): parts.append(f"Software: {provenance['software']}")
+    if provenance.get('creator_tool'): parts.append(f"Creator Tool: {provenance['creator_tool']}")
+    if provenance.get('c2pa'): parts.append("C2PA/Content Authenticity signature present")
     metadata_str = "Image metadata: " + "; ".join(parts) if parts else "No EXIF/XMP metadata found."
 
     # Data URL
@@ -238,7 +290,8 @@ def analyze():
         "You are an assistant that pinpoints exactly where a photo was taken. "
         "Give the most specific location you can (landmarks, city, region). "
         "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
-        "clearly state so and explain your reasoning. Always use both visual cues and all available metadata."
+        "clearly state so and explain your reasoning. Always use both visual cues and all available metadata. "
+        "Also, summarize any provenance or software information you find."
     )
 
     # Payload (no max_tokens)
@@ -252,7 +305,7 @@ def analyze():
               "role": "user",
               "content": [
                 {"type": "text", "text": metadata_str},
-                {"type": "text", "text": f"Where exactly was this photo taken? Use visual cues and embedded metadata. Also, does this image appear to be AI-generated or synthetic? Explain your reasoning. AI detection reason: {ai_reason}"},
+                {"type": "text", "text": f"Where exactly was this photo taken? Use visual cues and embedded metadata. Also, does this image appear to be AI-generated or synthetic? Explain your reasoning. AI detection reason: {ai_reason}. Provenance: {provenance}"},
                 {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}}
               ]
             }
