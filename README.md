@@ -14,6 +14,9 @@ A Flask-based demo app to pinpoint where a photo was taken using both visual cue
   - LLM prompt asks for both location and AI/synthetic status, with reasoning.
 - **Accessible API:** Returns both the LLM's answer and all extracted metadata for transparency.
 - **Frontend:** Simple, accessible drag-and-drop UI (see `templates/index.html`).
+- **Always displays a map:** If GPS is present, shows the location; if not, shows a world map centered at (0,0).
+- **EXIF Consistency:** Both original and processed EXIF metadata are extracted and displayed for transparency.
+- **Accessibility:** Map and metadata sections include ARIA/alt text and keyboard navigation support.
 
 ---
 
@@ -130,4 +133,34 @@ A CLI test script (`cli_test.py`) will allow you to:
     - `GET /logs` — Download the current server log file.
 - **Frontend Buttons:**
   - "Download Report" and "Download Logs" buttons are available below the metadata section after analysis.
-  - Buttons are accessible (keyboard/ARIA labels) and work with screen readers. 
+  - Buttons are accessible (keyboard/ARIA labels) and work with screen readers.
+
+## Usage
+1. Upload or drag-and-drop an image.
+2. The app analyzes the image, extracts all metadata, and queries the LLM for a location and AI detection.
+3. The UI displays:
+   - LLM answer
+   - AI detection summary
+   - Camera, date, GPS, software, and provenance
+   - Collapsible panels for EXIF (original and processed), HEIC EXIF, and XMP/ICC
+   - A map (always visible)
+   - Downloadable report and logs
+
+## Accessibility
+- All interactive elements have ARIA labels.
+- Map marker is keyboard accessible and has alt text.
+- Metadata and results are announced via `aria-live`.
+
+## Setup
+- Requires Python 3.8+, Flask, Pillow, requests, and (optionally) pillow-heif/pyheif for HEIC support.
+- See `requirements.txt` for dependencies.
+
+## CORS
+- CORS is enabled for all endpoints for easy integration.
+
+## Changelog
+- See `CHANGELOG.md` for details.
+
+---
+
+For questions or accessibility feedback, contact Luke Steuber. 

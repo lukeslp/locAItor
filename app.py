@@ -3,13 +3,12 @@ import os
 import base64
 import requests
 from io import BytesIO
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, stream_with_context, Response
 from flask_cors import CORS
 from PIL import Image, ExifTags, ImageCms
 import xml.etree.ElementTree as ET
 import logging
 import tempfile
-import json
 
 app = Flask(__name__)
 CORS(app)
@@ -33,11 +32,7 @@ MODEL       = os.getenv('XAI_MODEL', 'grok-2-vision')
 
 SYSTEM_PROMPT = (
     "You are an assistant that pinpoints exactly where a photo was taken. "
-    "Give the most specific location you can (landmarks, city, region). "
-    "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
-    "clearly state so and explain your reasoning. Always use both visual cues and all available metadata, including EXIF, HEIC EXIF, XMP, ICC, and provenance fields. "
-    "You will be provided with a full metadata JSON block. Use all available metadata in your answer, and cite any relevant fields. "
-    "If HEIC metadata is present, use it as well. Summarize any provenance or software information you find."
+    "Give the most specific location you can (landmarks, city, region)."
 )
 
 def extract_exif(image_bytes):
@@ -269,67 +264,56 @@ def extract_exif_heic(image_bytes):
 # Store last analysis for report download
 last_analysis_result = None
 
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    global last_analysis_result
-    if 'image' not in request.files:
-        logger.error('No image provided in request.')
-        return jsonify({'error': 'No image provided'}), 400
+# --- Utility: DMS to decimal conversion ---
+def dms_to_decimal(dms, ref=None):
+    """
+    Convert EXIF DMS (e.g., '34 deg 25\' 7.43" N') to decimal.
+    Accepts string, tuple/list, or float.
+    """
+    import re
+    if isinstance(dms, (float, int)):
+        return float(dms)
+    if isinstance(dms, str):
+        match = re.match(r"(\d+)[^\d]+(\d+)[^\d]+([\d.]+)[^\d]*([NSEW])?", dms)
+        if match:
+            deg, min, sec, direction = match.groups()
+            dec = float(deg) + float(min)/60 + float(sec)/3600
+            if direction in ['S', 'W'] or (ref and ref in ['S', 'W']):
+                dec = -dec
+            return dec
+    if isinstance(dms, (list, tuple)) and len(dms) == 3:
+        deg, min, sec = dms
+        dec = float(deg) + float(min)/60 + float(sec)/3600
+        if ref in ['S', 'W']:
+            dec = -dec
+        return dec
+    return None
 
-    image = request.files['image']
-    raw   = image.read()
-    orig_format = image.mimetype
-    heic_exif = {}
+# --- Modular GPS extraction ---
+def extract_best_gps(exif_sources):
+    """
+    exif_sources: list of (name, dict) tuples (heic_exif, exif_orig, exif, parsed_gps)
+    Returns: (gps_coords: dict or None, source: str or None)
+    Always returns decimal lat/lon if possible.
+    """
+    for source_name, exif in exif_sources:
+        if not exif:
+            continue
+        lat = exif.get('GPSLatitude')
+        lon = exif.get('GPSLongitude')
+        lat_ref = exif.get('GPSLatitudeRef')
+        lon_ref = exif.get('GPSLongitudeRef')
+        dec_lat = dms_to_decimal(lat, lat_ref)
+        dec_lon = dms_to_decimal(lon, lon_ref)
+        if dec_lat is not None and dec_lon is not None:
+            return {'lat': dec_lat, 'lon': dec_lon}, source_name
+    return None, None
 
-    # --- HEIC/Conversion/Resize Handling ---
-    try:
-        img = Image.open(BytesIO(raw))
-        logger.info(f"Image opened: format={img.format}, mimetype={orig_format}, size={img.size}")
-    except UnidentifiedImageError as e:
-        logger.error(f"Unsupported image format or corrupted file: {e}")
-        return jsonify({'error': 'Unsupported image format or corrupted file.'}), 400
-
-    # Extract EXIF from HEIC before conversion
-    if img.format == 'HEIC' or orig_format in ('image/heic', 'image/heif'):
-        logger.info('Attempting HEIC EXIF extraction.')
-        if pyheif:
-            heic_exif = extract_exif_heic(raw)
-        if not pillow_heif:
-            logger.error('HEIC support not installed (pillow-heif missing).')
-            return jsonify({'error': 'HEIC support not installed. Please install pillow-heif.'}), 400
-        img = img.convert('RGB')
-        img_format = 'JPEG'
-    else:
-        img_format = img.format if img.format in ('JPEG', 'PNG') else 'JPEG'
-        if img.mode != 'RGB':
-            img = img.convert('RGB')
-
-    # Resize if too large
-    if max(img.size) > MAX_DIM:
-        scale = MAX_DIM / max(img.size)
-        new_size = (int(img.size[0]*scale), int(img.size[1]*scale))
-        logger.info(f"Resizing image from {img.size} to {new_size}")
-        img = img.resize(new_size, Image.LANCZOS)
-
-    # Save to bytes (JPEG, quality=90)
-    buf = BytesIO()
-    img.save(buf, format=img_format, quality=90)
-    buf.seek(0)
-    raw = buf.read()
-    if len(raw) > MAX_SIZE:
-        logger.error('Image too large after conversion (max 10MiB).')
-        return jsonify({'error': 'Image too large after conversion (max 10MiB).'}), 400
-
-    # EXIF, XMP, ICC extraction now uses processed bytes
-    exif = extract_exif(raw)
-    xmp_icc = extract_xmp_icc(raw)
-    provenance = extract_provenance(raw, exif, xmp_icc)
-    is_ai, ai_reason = detect_ai_generator(exif, xmp_icc, provenance)
-    logger.info(f"AI detection: {is_ai}, Reason: {ai_reason}")
-
-    # Merge all metadata
-    all_metadata = {
+# --- Modular metadata packaging ---
+def package_metadata(exif, exif_orig, heic_exif, xmp_icc, provenance, is_ai, ai_reason):
+    return {
         'exif': exif,
+        'exif_orig': exif_orig,
         'heic_exif': heic_exif,
         'xmp_icc': xmp_icc,
         'provenance': provenance,
@@ -337,76 +321,225 @@ def analyze():
         'ai_reason': ai_reason
     }
 
-    # GPS extraction (prefer HEIC EXIF if present)
-    gps = None
-    if heic_exif:
-        gps_keys = [k for k in heic_exif if 'GPS' in k]
-        if gps_keys:
-            gps = {k: heic_exif[k] for k in gps_keys}
-    if not gps:
-        gps = parse_gps(exif)
-    if isinstance(gps, tuple):
-        gps_coords = {'lat': gps[0], 'lon': gps[1]}
-    elif isinstance(gps, dict):
-        gps_coords = gps
-    else:
-        gps_coords = None
+# --- Modular streaming: metadata first, then LLM output ---
+def stream_metadata_and_llm(metadata, gps_coords, address, llm_stream):
+    import json
+    # 1. Send metadata as JSON line
+    yield json.dumps({'metadata': metadata, 'gps': gps_coords, 'address': address}) + '\n'
+    # 2. Stream LLM output
+    for chunk in llm_stream:
+        yield chunk
 
-    parts = []
-    if m := exif.get("Model"): parts.append(f"Camera: {m}")
-    if dt := exif.get("DateTimeOriginal"): parts.append(f"Taken on: {dt}")
-    if gps_coords and isinstance(gps_coords, dict) and 'lat' in gps_coords and 'lon' in gps_coords:
-        parts.append(f"GPS: {gps_coords['lat']:.6f}, {gps_coords['lon']:.6f}")
-    if 'xmp' in xmp_icc: parts.append("XMP metadata present")
-    if 'icc' in xmp_icc: parts.append("ICC profile present")
-    if provenance.get('software'): parts.append(f"Software: {provenance['software']}")
-    if provenance.get('creator_tool'): parts.append(f"Creator Tool: {provenance['creator_tool']}")
-    if provenance.get('c2pa'): parts.append("C2PA/Content Authenticity signature present")
-    metadata_str = "Image metadata: " + "; ".join(parts) if parts else "No EXIF/XMP metadata found."
-
-    # Data URL
-    data_url = f"data:image/{img_format.lower()};base64,{base64.b64encode(raw).decode()}"
-
-    # Payload (no max_tokens)
-    payload = {
-        "model": MODEL,
-        "temperature": 0.0,
-        "stream": False,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-              "role": "user",
-              "content": [
-                {"type": "text", "text": metadata_str},
-                {"type": "text", "text": "Full metadata (JSON):\n" + json.dumps(all_metadata, indent=2)},
-                {"type": "text", "text": f"Where exactly was this photo taken? Use visual cues and embedded metadata. Also, does this image appear to be AI-generated or synthetic? Explain your reasoning. AI detection reason: {ai_reason}. Provenance: {provenance}"},
-                {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}}
-              ]
-            }
-        ]
-    }
-
-    headers = {
-        "Authorization": f"Bearer {XAI_API_KEY}",
-        "Content-Type":  "application/json"
-    }
-
+@app.route('/analyze', methods=['POST'])
+def analyze():
     try:
-        r = requests.post(XAI_API_URL, headers=headers, json=payload)
-        r.raise_for_status()
-        data   = r.json()
-        answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        logger.info(f"xAI API response received.")
-        result = {
-            "content": answer,
-            "metadata": all_metadata,
-            "gps": gps_coords
+        global last_analysis_result
+        if 'image' not in request.files:
+            logger.error('No image provided in request.')
+            return jsonify({'error': 'No image provided'}), 400
+
+        image = request.files['image']
+        raw_orig = image.read()  # Save original bytes
+        orig_format = image.mimetype
+        heic_exif = {}
+
+        # --- HEIC/Conversion/Resize Handling ---
+        try:
+            img = Image.open(BytesIO(raw_orig))
+            logger.info(f"Image opened: format={img.format}, mimetype={orig_format}, size={img.size}")
+        except UnidentifiedImageError as e:
+            logger.error(f"Unsupported image format or corrupted file: {e}")
+            return jsonify({'error': 'Unsupported image format or corrupted file.'}), 400
+
+        # Extract EXIF from HEIC before conversion
+        if img.format == 'HEIC' or orig_format in ('image/heic', 'image/heif'):
+            logger.info('Attempting HEIC EXIF extraction.')
+            if pyheif:
+                heic_exif = extract_exif_heic(raw_orig)
+            if not pillow_heif:
+                logger.error('HEIC support not installed (pillow-heif missing).')
+                return jsonify({'error': 'HEIC support not installed. Please install pillow-heif.'}), 400
+            img = img.convert('RGB')
+            img_format = 'JPEG'
+        else:
+            img_format = img.format if img.format in ('JPEG', 'PNG') else 'JPEG'
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+        # Extract EXIF and GPS from original bytes (before conversion)
+        exif_orig = extract_exif(raw_orig)
+        gps_orig = parse_gps(exif_orig)
+
+        # Resize if too large
+        if max(img.size) > MAX_DIM:
+            scale = MAX_DIM / max(img.size)
+            new_size = (int(img.size[0]*scale), int(img.size[1]*scale))
+            logger.info(f"Resizing image from {img.size} to {new_size}")
+            img = img.resize(new_size, Image.LANCZOS)
+
+        # Save to bytes (JPEG, quality=90)
+        buf = BytesIO()
+        img.save(buf, format=img_format, quality=90)
+        buf.seek(0)
+        raw = buf.read()
+        if len(raw) > MAX_SIZE:
+            logger.error('Image too large after conversion (max 10MiB).')
+            return jsonify({'error': 'Image too large after conversion (max 10MiB).'}), 400
+
+        # EXIF, XMP, ICC extraction now uses processed bytes
+        exif = extract_exif(raw)
+        xmp_icc = extract_xmp_icc(raw)
+        provenance = extract_provenance(raw, exif, xmp_icc)
+        is_ai, ai_reason = detect_ai_generator(exif, xmp_icc, provenance)
+        logger.info(f"AI detection: {is_ai}, Reason: {ai_reason}")
+
+        # --- Compose full metadata for LLM and frontend ---
+        all_metadata = package_metadata(exif, exif_orig, heic_exif, xmp_icc, provenance, is_ai, ai_reason)
+
+        # --- Modular GPS extraction: try all sources ---
+        exif_sources = [
+            ('heic_exif', heic_exif),
+            ('exif_orig', exif_orig),
+            ('exif', exif),
+        ]
+        # Add parsed GPS as dict if available
+        if gps_orig and isinstance(gps_orig, tuple):
+            exif_sources.append(('parse_gps', {'GPSLatitude': gps_orig[0], 'GPSLongitude': gps_orig[1]}))
+        gps_coords, gps_source = extract_best_gps(exif_sources)
+        logger.info(f"Final GPS coordinates sent to frontend: {gps_coords} (source: {gps_source})")
+
+        # Compose a detailed metadata string for the LLM, including all fields
+        def dict_to_lines(d, prefix=''):
+            if not isinstance(d, dict):
+                return str(d)
+            lines = []
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    lines.append(f"{prefix}{k}:")
+                    lines.extend(dict_to_lines(v, prefix=prefix+'  '))
+                else:
+                    lines.append(f"{prefix}{k}: {v}")
+            return lines
+
+        metadata_lines = []
+        metadata_lines.append('EXIF:')
+        metadata_lines.extend(dict_to_lines(exif, '  '))
+        if heic_exif:
+            metadata_lines.append('HEIC_EXIF:')
+            metadata_lines.extend(dict_to_lines(heic_exif, '  '))
+        metadata_lines.append('XMP/ICC:')
+        metadata_lines.extend(dict_to_lines(xmp_icc, '  '))
+        metadata_lines.append('Provenance:')
+        metadata_lines.extend(dict_to_lines(provenance, '  '))
+        metadata_lines.append(f'AI Generated: {is_ai}')
+        metadata_lines.append(f'AI Reason: {ai_reason}')
+        full_metadata_str = '\n'.join(metadata_lines)
+
+        # Data URL
+        data_url = f"data:image/{img_format.lower()};base64,{base64.b64encode(raw).decode()}"
+
+        # Enhanced system prompt
+        SYSTEM_PROMPT = (
+            "You are an assistant that pinpoints exactly where a photo was taken. "
+            "Give the most specific location you can (landmarks, city, region). "
+            "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
+            "clearly state so and explain your reasoning. Always use both visual cues and ALL available metadata, including EXIF, HEIC EXIF, XMP, ICC, provenance, and AI detection fields. "
+            "If any metadata is present, use it in your answer. If HEIC-specific metadata is present, use it. "
+            "Summarize any provenance or software information you find."
+        )
+
+        # Payload (enable streaming)
+        payload = {
+            "model": MODEL,
+            "temperature": 0.0,
+            "stream": True,  # Always True for streaming
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                  "role": "user",
+                  "content": [
+                    {"type": "text", "text": full_metadata_str},
+                    {"type": "text", "text": f"Where exactly was this photo taken? Use visual cues and ALL embedded metadata (including EXIF, HEIC EXIF, XMP, ICC, provenance, and AI detection fields). Also, does this image appear to be AI-generated or synthetic? Explain your reasoning. AI detection reason: {ai_reason}. Provenance: {provenance}"},
+                    {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}}
+                  ]
+                }
+            ]
         }
-        last_analysis_result = result  # Store for report download
-        return jsonify(result)
-    except requests.RequestException as e:
-        logger.error(f"xAI API request failed: {e}")
-        return jsonify({"error": str(e)}), 502
+
+        headers = {
+            "Authorization": f"Bearer {XAI_API_KEY}",
+            "Content-Type":  "application/json"
+        }
+
+        # --- Reverse geocode if possible ---
+        address = None
+        if gps_coords and gps_coords['lat'] and gps_coords['lon']:
+            try:
+                url = (
+                    f'https://nominatim.openstreetmap.org/reverse?format=json'
+                    f'&lat={gps_coords["lat"]}&lon={gps_coords["lon"]}&zoom=18'
+                    f'&addressdetails=1&accept-language=en'
+                )
+                r = requests.get(url, headers={'User-Agent': 'locator-app/1.0'})
+                if r.ok:
+                    address = r.json().get('display_name')
+                    logger.info(f"Reverse geocoded address: {address}")
+                else:
+                    logger.warning(f"Reverse geocoding failed: {r.text}")
+            except Exception as e:
+                logger.error(f"Reverse geocoding exception: {e}")
+
+        # --- Streaming xAI response ---
+        def llm_stream():
+            try:
+                with requests.post(XAI_API_URL, headers=headers, json=payload, stream=True) as r:
+                    r.raise_for_status()
+                    for chunk in r.iter_content(chunk_size=1024):
+                        if chunk:
+                            text = chunk.decode(errors='ignore')
+                            yield text
+            except Exception as e:
+                logger.error(f"Streaming xAI API failed: {e}")
+                yield f"\n[Error streaming xAI API: {e}]"
+
+        # If client requests streaming, use streaming response
+        if request.args.get('stream') == '1':
+            try:
+                return Response(stream_with_context(stream_metadata_and_llm(all_metadata, gps_coords, address, llm_stream())), mimetype='text/plain')
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                return Response(f"[Error streaming: {e}]", mimetype='text/plain')
+
+        # Fallback: non-streaming (for legacy clients)
+        payload["stream"] = False
+        try:
+            r = requests.post(XAI_API_URL, headers=headers, json=payload)
+            try:
+                r.raise_for_status()
+                if r.headers.get('content-type', '').startswith('application/json'):
+                    data = r.json()
+                    answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                else:
+                    logger.error(f"xAI API non-JSON response: {r.status_code} {r.text}")
+                    return jsonify({"error": f"xAI API returned non-JSON response: {r.status_code} {r.text[:200]}" }), 502
+            except Exception as e:
+                logger.error(f"xAI API request failed: {e}, response: {r.text[:200]}")
+                return jsonify({"error": f"xAI API request failed: {e}, response: {r.text[:200]}" }), 502
+            logger.info(f"xAI API response received.")
+            result = {
+                "content": answer,
+                "metadata": all_metadata,
+                "gps": gps_coords,
+                "address": address
+            }
+            last_analysis_result = result  # Store for report download
+            return jsonify(result)
+        except requests.RequestException as e:
+            logger.error(f"xAI API request failed: {e}")
+            return jsonify({"error": str(e)}), 502
+    except Exception as e:
+        logger.error(f"/analyze endpoint error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/report', methods=['GET'])
 def download_report():
@@ -414,6 +547,7 @@ def download_report():
     Download the last analysis as a JSON file.
     """
     from flask import Response
+    import json
     if not last_analysis_result:
         return jsonify({'error': 'No analysis available yet.'}), 404
     response = Response(json.dumps(last_analysis_result, indent=2), mimetype='application/json')
@@ -429,6 +563,19 @@ def download_logs():
     if not os.path.exists(log_path):
         return jsonify({'error': 'Log file not found.'}), 404
     return send_from_directory(os.path.dirname(log_path), os.path.basename(log_path), as_attachment=True)
+
+# --- Reverse Geocoding Endpoint ---
+@app.route('/reverse_geocode')
+def reverse_geocode():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    if not lat or not lon:
+        return jsonify({'error': 'Missing lat/lon'}), 400
+    url = f'https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1'
+    r = requests.get(url, headers={'User-Agent': 'locator-app/1.0'})
+    if r.ok:
+        return jsonify(r.json())
+    return jsonify({'error': 'Reverse geocoding failed'}), 502
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5002, debug=True)

@@ -2,218 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>📍 Where Was This Photo Taken?</title>
+  <title>locAItor</title>
   <link rel="icon" href="data:,">
-  <!-- Open Sans font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Use Flask's url_for for static asset handling -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <!-- markdown-it for rendering -->
   <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Inter', system-ui, sans-serif;
-      background: #F5F5F5;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      color: #1A1A1A;
-    }
-    .container {
-      width: 100%;
-      max-width: 800px;
-      margin: 2rem 1rem;
-      padding: 1.5rem;
-      background: #fff;
-      box-shadow: 0 4px 16px rgba(26,26,26,0.07);
-      border-radius: 18px;
-      text-align: center;
-    }
-    #dropZone {
-      border: 2px dashed #E5E5E5;
-      padding: 2rem;
-      border-radius: 12px;
-      background: #fafafa;
-      cursor: pointer;
-      transition: border-color 0.3s, background 0.3s;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-      color: #1A1A1A;
-      font-size: 1.1rem;
-    }
-    #dropZone.dragover {
-      border-color: #FFB800;
-      background: #FFF8E1;
-    }
-    #preview {
-      margin-top: 1.5rem;
-      width: 100%;
-      max-width: 800px;
-      height: auto;
-      display: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    #result {
-      margin-top: 1.5rem;
-      background: #fff;
-      padding: 1.2rem 1rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      display: none;
-      text-align: left;
-      font-family: 'Inter', system-ui, sans-serif;
-      white-space: normal;
-      font-size: 1.15rem;
-      color: #1A1A1A;
-    }
-    #result p {
-      margin: 0.2em 0;
-      line-height: 1.4;
-    }
-    #result ul, #result ol {
-      margin: 0.2em 0 0.2em 1.2em;
-      padding: 0 0 0 1.2em;
-    }
-    #result li {
-      margin: 0.1em 0;
-      line-height: 1.3;
-    }
-    #result h1, #result h2, #result h3, #result h4, #result h5, #result h6 {
-      margin: 0.4em 0 0.15em 0;
-      line-height: 1.15;
-      font-weight: 700;
-      color: #FFB800;
-    }
-    #result pre, #result code {
-      font-size: 1em;
-      line-height: 1.3;
-      margin: 0.15em 0;
-      background: #F5F5F5;
-      border-radius: 4px;
-      padding: 0.2em 0.4em;
-    }
-    input[type="file"] {
-      display: none;
-    }
-    .brand-btn {
-      background: #FFB800;
-      color: #1A1A1A;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      padding: 0.7em 1.5em;
-      margin: 1em 0;
-      cursor: pointer;
-      transition: background 0.2s;
-      box-shadow: 0 2px 8px rgba(255,184,0,0.08);
-    }
-    .brand-btn:hover, .brand-btn:focus {
-      background: #FFD54F;
-      outline: 2px solid #FFB800;
-    }
-    #metaSection {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 1.05rem;
-      margin-top: 1.5rem;
-      background: #F5F5F5;
-      border-radius: 12px;
-      padding: 1.1rem 1rem;
-      box-shadow: 0 2px 8px rgba(26,26,26,0.04);
-    }
-    #metaSection h2 {
-      font-size: 1.2rem;
-      color: #FFB800;
-      margin-bottom: 0.5em;
-      font-weight: 700;
-    }
-    #metaContent pre {
-      font-size: 0.98em;
-      background: #fff;
-      border-radius: 4px;
-      padding: 0.5em;
-      color: #1A1A1A;
-      box-shadow: 0 1px 2px rgba(26,26,26,0.03);
-    }
-    #metaContent details {
-      margin-bottom: 0.5em;
-    }
-    #gpsSection, #mapSection {
-      margin-top: 1em;
-    }
-    #gpsSection strong {
-      color: #FFB800;
-    }
-    #map {
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(26,26,26,0.07);
-    }
-    .provenance-list {
-      margin: 0.5em 0 0.5em 0;
-      padding: 0;
-      list-style: none;
-    }
-    .provenance-list li {
-      margin: 0.2em 0;
-      padding: 0.2em 0.5em;
-      background: #fff;
-      border-radius: 4px;
-      font-size: 0.98em;
-      color: #333;
-      box-shadow: 0 1px 2px rgba(26,26,26,0.03);
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-    }
-    .provenance-list li strong {
-      color: #FFB800;
-      min-width: 110px;
-      font-weight: 600;
-    }
-    @media (max-width: 600px) {
-      .container {
-        margin: 0.5rem;
-        padding: 0.7rem;
-      }
-      #dropZone {
-        padding: 1rem;
-        font-size: 1rem;
-      }
-      #result, #metaSection {
-        padding: 0.7rem 0.5rem;
-        font-size: 1rem;
-      }
-      #preview {
-        margin-top: 1rem;
-      }
-      #metaSection h2 {
-        font-size: 1.05rem;
-      }
-    }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📸 Where Was This Taken?</h1>
-    <div id="dropZone">Drag &amp; drop an image here<br>or click to choose one</div>
-    <input type="file" id="fileInput" accept="image/*"/>
-    <div id="result" aria-live="polite"></div>
-    <section id="metaSection" style="display:none; text-align:left; margin-top:1.5rem;" aria-labelledby="metaHeading">
-      <h2 id="metaHeading" style="font-size:1.2em; margin-bottom:0.5em;">Image Metadata & AI Detection</h2>
-      <div id="metaContent"></div>
-      <div id="provenanceSection"></div>
-      <div id="gpsSection" style="margin-top:1em;"></div>
-      <div id="mapSection" style="margin-top:1em;"></div>
-      <details style="margin-top:1em;"><summary><strong>Raw Metadata (JSON)</strong></summary><pre id="rawMeta" style="font-size:0.95em; background:#f8f8f8; border-radius:4px; padding:0.5em;"></pre></details>
-      <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
-        <button id="downloadReport" class="brand-btn" aria-label="Download analysis report as JSON">Download Report</button>
-        <button id="downloadLogs" class="brand-btn" aria-label="Download server logs">Download Logs</button>
+  <div class="main-container">
+    <h1 class="page-title">locAItor</h1>
+    <div class="upload-section">
+      <div id="dropZone" class="upload-dropzone">Drag &amp; drop an image here<br>or click to choose one</div>
+      <input type="file" id="fileInput" accept="image/*"/>
+      <div class="profile-image-wrapper">
+        <img id="preview" class="profile-image" tabindex="0" alt="Image preview"/>
       </div>
-    </section>
-    <img id="preview"/>
+    </div>
+    <div class="results-section">
+      <!-- Hide LLM output area by default -->
+      <div id="llm-output" aria-live="polite" class="llm-streaming-response" style="display:none;"></div>
+      <section id="metaSection" style="display:none; text-align:left; margin-top:1.5rem;" aria-labelledby="metaHeading">
+        <h2 id="metaHeading" class="meta-heading">Image Metadata & AI Detection</h2>
+        <div id="metaContent"></div>
+        <div id="provenanceSection"></div>
+        <div id="gpsSection" style="margin-top:1em;"></div>
+        <div id="mapSection" style="margin-top:1em;"></div>
+        <details style="margin-top:1em;"><summary><strong>Raw Metadata (JSON)</strong></summary><pre id="rawMeta" style="font-size:0.95em; background:#f8f8f8; border-radius:4px; padding:0.5em;"></pre></details>
+        <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
+          <button id="downloadReport" class="brand-btn" aria-label="Download analysis report as JSON">Download Report</button>
+          <button id="downloadLogs" class="brand-btn" aria-label="Download server logs">Download Logs</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal for gallery view -->
+  <div id="galleryModal" class="gallery-modal" tabindex="-1" aria-modal="true" role="dialog" style="display:none;">
+    <div class="gallery-modal-content">
+      <span id="closeModal" class="gallery-modal-close" tabindex="0" aria-label="Close gallery">&times;</span>
+      <img id="modalImage" class="gallery-modal-image" alt="Full size image preview"/>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -223,14 +55,17 @@
     const DZ = document.getElementById('dropZone'),
           FI = document.getElementById('fileInput'),
           PV = document.getElementById('preview'),
-          RS = document.getElementById('result'),
+          RS = document.getElementById('llm-output'),
           md = window.markdownit(),
           MS = document.getElementById('metaSection'),
           MC = document.getElementById('metaContent'),
           PROV = document.getElementById('provenanceSection'),
           GPS = document.getElementById('gpsSection'),
           MAP = document.getElementById('mapSection'),
-          RAW = document.getElementById('rawMeta');
+          RAW = document.getElementById('rawMeta'),
+          MODAL = document.getElementById('galleryModal'),
+          MODAL_IMG = document.getElementById('modalImage'),
+          CLOSE_MODAL = document.getElementById('closeModal');
 
     DZ.onclick = () => FI.click();
     ['dragenter','dragover'].forEach(e =>
@@ -247,13 +82,27 @@
       if (ev.target.files.length) handleImage(ev.target.files[0]);
     };
 
+    // Profile image click/keyboard for gallery modal
+    PV.onclick = () => showGallery();
+    PV.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') showGallery(); };
+    function showGallery() {
+      if (!PV.src) return;
+      MODAL_IMG.src = PV.src;
+      MODAL.style.display = 'flex';
+      MODAL.focus();
+    }
+    CLOSE_MODAL.onclick = () => { MODAL.style.display = 'none'; };
+    CLOSE_MODAL.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') MODAL.style.display = 'none'; };
+    MODAL.onclick = (e) => { if (e.target === MODAL) MODAL.style.display = 'none'; };
+
     async function handleImage(file) {
-      // hide drop zone, show preview & result container
       DZ.style.display = 'none';
       PV.style.display = 'none';
       PV.src = '';
-      RS.style.display = 'block';
-      RS.textContent   = 'Uploading and analyzing…';
+      if (RS) {
+        RS.style.display = 'none'; // Hide LLM output area until content
+        RS.textContent   = '';
+      }
       MS.style.display = 'none';
       MC.innerHTML     = '';
       PROV.innerHTML   = '';
@@ -281,82 +130,72 @@
       form.append('image', file);
 
       try {
-        const resp = await fetch('/analyze', { method:'POST', body: form });
-        const j    = await resp.json();
-        const text = j.content || j.error;
-        RS.innerHTML = md.render(text);
-
-        // --- Render metadata and AI detection results ---
-        if (j.metadata) {
-          let html = '';
-          // AI detection summary
-          html += `<div><strong>AI Generated:</strong> <span aria-live="polite">${j.metadata.ai_generated === null ? 'Unknown' : (j.metadata.ai_generated ? 'Yes' : 'No')}</span></div>`;
-          html += `<div><strong>Reason:</strong> <span>${j.metadata.ai_reason || ''}</span></div>`;
-          // EXIF
-          if (j.metadata.exif && Object.keys(j.metadata.exif).length) {
-            html += '<details><summary><strong>EXIF Metadata</strong></summary><pre>' +
-              JSON.stringify(j.metadata.exif, null, 2) + '</pre></details>';
-          }
-          // HEIC EXIF
-          if (j.metadata.heic_exif && Object.keys(j.metadata.heic_exif).length) {
-            if (j.metadata.heic_exif.error) {
-              html += `<div style="color:#b00; background:#fff3cd; border-radius:6px; padding:0.5em; margin-bottom:0.5em;">⚠️ <strong>HEIC EXIF extraction failed:</strong> ${j.metadata.heic_exif.error} <br>This is a technical limitation, not a sign of AI generation.</div>`;
-            } else {
-              html += '<details><summary><strong>HEIC EXIF Metadata</strong></summary><pre>' +
-                JSON.stringify(j.metadata.heic_exif, null, 2) + '</pre></details>';
-            }
-          }
-          // XMP/ICC
-          if (j.metadata.xmp_icc && (j.metadata.xmp_icc.xmp || j.metadata.xmp_icc.icc)) {
-            html += '<details><summary><strong>XMP/ICC Metadata</strong></summary><pre>' +
-              JSON.stringify(j.metadata.xmp_icc, null, 2) + '</pre></details>';
-          }
-          MC.innerHTML = html;
-          MS.style.display = 'block';
-        } else {
-          MS.style.display = 'none';
-        }
-        // --- Provenance Section ---
-        if (j.metadata && j.metadata.provenance) {
-          let prov = j.metadata.provenance;
-          let provHtml = '<ul class="provenance-list">';
-          for (const [k, v] of Object.entries(prov)) {
-            provHtml += `<li><strong>${k.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> <span>${String(v)}</span></li>`;
-          }
-          provHtml += '</ul>';
-          PROV.innerHTML = provHtml;
-        } else {
-          PROV.innerHTML = '';
-        }
-        // --- GPS Section ---
-        if (j.gps && j.gps.lat !== undefined && j.gps.lon !== undefined) {
-          GPS.innerHTML = `<div><strong>GPS Coordinates:</strong> <span>${j.gps.lat.toFixed(6)}, ${j.gps.lon.toFixed(6)}</span></div>`;
-          // --- Map Section ---
-          MAP.innerHTML = '<div id="map" style="height:250px; border-radius:6px;"></div>';
-          setTimeout(() => {
-            if (window.L && document.getElementById('map')) {
-              try {
-                let map = L.map('map').setView([j.gps.lat, j.gps.lon], 15);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                  attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                L.marker([j.gps.lat, j.gps.lon]).addTo(map)
-                  .bindPopup('Detected Location').openPopup();
-              } catch (e) {
-                MAP.innerHTML = '<div style="color:#b00; background:#fff3cd; border-radius:6px; padding:0.5em;">⚠️ <strong>Map could not be rendered.</strong> Please check your internet connection or try a different browser.</div>';
+        // Streaming LLM answer with metadata-first protocol
+        let streamed = false;
+        if (window.ReadableStream) {
+          const resp = await fetch('/analyze?stream=1', { method:'POST', body: form });
+          if (resp.ok && resp.body && resp.headers.get('content-type') === 'text/plain') {
+            streamed = true;
+            const reader = resp.body.getReader();
+            let decoder = new TextDecoder();
+            let text = '';
+            let firstChunk = true;
+            let metaObj = null;
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value, {stream:true});
+              if (firstChunk) {
+                const nlIdx = chunk.indexOf('\n');
+                let metaLine = chunk, rest = '';
+                if (nlIdx !== -1) {
+                  metaLine = chunk.slice(0, nlIdx);
+                  rest = chunk.slice(nlIdx+1);
+                }
+                try {
+                  metaObj = JSON.parse(metaLine);
+                  renderMetadata(metaObj); // Show metadata/map immediately
+                } catch (e) {
+                  MC.innerHTML = '<div style="color:#b00;">Failed to parse metadata from server.</div>';
+                }
+                if (rest) {
+                  text += rest;
+                  RS.innerHTML = md.render(text);
+                  RS.style.display = 'block'; // Show LLM output area when content is available
+                }
+                firstChunk = false;
+              } else {
+                text += chunk;
+                RS.innerHTML = md.render(text);
+                RS.style.display = 'block'; // Show LLM output area when content is available
               }
-            } else {
-              MAP.innerHTML = '<div style="color:#b00; background:#fff3cd; border-radius:6px; padding:0.5em;">⚠️ <strong>Map dependency not loaded.</strong> Please check your internet connection.</div>';
             }
-          }, 100);
-        } else {
-          GPS.innerHTML = '';
-          MAP.innerHTML = '';
+            return;
+          }
         }
-        // --- Raw Metadata ---
-        RAW.textContent = JSON.stringify(j.metadata, null, 2);
+        if (!streamed) {
+          const resp = await fetch('/analyze', { method:'POST', body: form });
+          const j    = await resp.json();
+          if (j.error) {
+            RS.innerHTML = `<div style='color:#b00;'>${j.error}</div>`;
+            RS.style.display = 'block';
+            MS.style.display = 'none';
+            return;
+          }
+          if (!j.metadata) {
+            RS.innerHTML = `<div style='color:#b00;'>No metadata returned from server.</div>`;
+            RS.style.display = 'block';
+            MS.style.display = 'none';
+            return;
+          }
+          renderMetadata(j); // Show metadata/map first
+          const text = j.content || j.error;
+          RS.innerHTML = md.render(text);
+          RS.style.display = 'block';
+        }
       } catch (err) {
         RS.textContent = 'Error: ' + err.message;
+        RS.style.display = 'block';
         MS.style.display = 'none';
       }
     }
@@ -407,6 +246,121 @@
         };
       }
     });
+
+    // Collapsible panels JS (W3Schools pattern, accessible)
+    function initCollapsibles() {
+      var coll = document.getElementsByClassName("collapsible");
+      for (let i = 0; i < coll.length; i++) {
+        coll[i].onclick = function() {
+          this.classList.toggle("active");
+          var content = this.nextElementSibling;
+          var expanded = this.getAttribute('aria-expanded') === 'true';
+          this.setAttribute('aria-expanded', !expanded);
+          content.setAttribute('aria-hidden', expanded);
+          if (content.style.display === "block") {
+            content.style.display = "none";
+          } else {
+            content.style.display = "block";
+          }
+        };
+        coll[i].setAttribute('aria-expanded', 'false');
+        if (coll[i].nextElementSibling) {
+          coll[i].nextElementSibling.style.display = 'none';
+          coll[i].nextElementSibling.setAttribute('aria-hidden', 'true');
+        }
+      }
+    }
+
+    // --- Render metadata and map from metadata object (for streaming and fallback) ---
+    function renderMetadata(j) {
+      if (!j || !j.metadata) return;
+      MS.style.display = 'block'; // Show metadata/map area immediately
+      // j: { metadata, gps, address }
+      const hasGps = j.gps && typeof j.gps.lat === 'number' && typeof j.gps.lon === 'number';
+      const gpsDisplay = hasGps ? `${j.gps.lat.toFixed(6)}, ${j.gps.lon.toFixed(6)}` : (() => {
+        let lat = j.metadata?.exif?.GPSLatitude || j.metadata?.heic_exif?.GPSLatitude;
+        let lon = j.metadata?.exif?.GPSLongitude || j.metadata?.heic_exif?.GPSLongitude;
+        if (lat && lon) return `${lat}, ${lon}`;
+        return '—';
+      })();
+      // ---
+      let html = '';
+      html += `<div><strong>AI Generated:</strong> <span aria-live="polite">${j.metadata.ai_generated === null ? 'Unknown' : (j.metadata.ai_generated ? 'Yes' : 'No')}</span></div>`;
+      html += `<div><strong>Reason:</strong> <span>${j.metadata.ai_reason || ''}</span></div>`;
+      html += '<table class="meta-summary"><tr><td><strong>Camera Model</strong></td><td>' + (j.metadata.exif?.Model || j.metadata.heic_exif?.Model || '—') + '</td></tr>';
+      html += '<tr><td><strong>Date Taken</strong></td><td>' + (j.metadata.exif?.DateTimeOriginal || j.metadata.heic_exif?.DateTimeOriginal || '—') + '</td></tr>';
+      html += '<tr><td><strong>GPS</strong></td><td>' + gpsDisplay + '</td></tr>';
+      html += '<tr><td><strong>Software</strong></td><td>' + (j.metadata.provenance?.software || '—') + '</td></tr>';
+      html += '<tr><td><strong>Creator Tool</strong></td><td>' + (j.metadata.provenance?.creator_tool || '—') + '</td></tr>';
+      html += '</table>';
+      html += '<button type="button" class="collapsible" aria-expanded="false">EXIF Metadata</button>';
+      html += '<div class="collapsible-content" aria-hidden="true"><pre>' + JSON.stringify(j.metadata.exif || {}, null, 2) + '</pre></div>';
+      html += '<button type="button" class="collapsible" aria-expanded="false">HEIC EXIF Metadata</button>';
+      html += '<div class="collapsible-content" aria-hidden="true">';
+      if (j.metadata.heic_exif && Object.keys(j.metadata.heic_exif).length) {
+        if (j.metadata.heic_exif.error) {
+          html += `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.5em; margin-bottom:0.5em;">⚠️ <strong>HEIC EXIF extraction failed:</strong> ${j.metadata.heic_exif.error} <br>This is a technical limitation, not a sign of AI generation.</div>`;
+        } else {
+          html += '<pre>' + JSON.stringify(j.metadata.heic_exif, null, 2) + '</pre>';
+        }
+      } else {
+        html += '<pre>{}</pre>';
+      }
+      html += '</div>';
+      html += '<button type="button" class="collapsible" aria-expanded="false">XMP/ICC Metadata</button>';
+      html += '<div class="collapsible-content" aria-hidden="true"><pre>' + JSON.stringify(j.metadata.xmp_icc || {}, null, 2) + '</pre></div>';
+      html += '<div class="button-row"><button id="downloadReport" class="brand-btn" aria-label="Download analysis report as JSON">Download Report</button>';
+      html += '<button id="downloadLogs" class="brand-btn" aria-label="Download server logs">Download Logs</button></div>';
+      MC.innerHTML = html;
+      // Provenance
+      if (j.metadata && j.metadata.provenance) {
+        let prov = j.metadata.provenance;
+        let provHtml = '<h3>Provenance</h3><ul class="provenance-list">';
+        for (const [k, v] of Object.entries(prov)) {
+          provHtml += `<li><strong>${k.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> <span>${String(v)}</span></li>`;
+        }
+        provHtml += '</ul>';
+        PROV.innerHTML = provHtml;
+      } else {
+        PROV.innerHTML = '<h3>Provenance</h3><div style="color:#888;">No provenance metadata found.</div>';
+      }
+      // --- Map ---
+      MAP.innerHTML = '<div id="map" style="height:350px; border-radius:8px;"></div>';
+      setTimeout(() => {
+        if (window.L && document.getElementById('map')) {
+          try {
+            let map, marker;
+            if (j.gps && typeof j.gps.lat === 'number' && typeof j.gps.lon === 'number') {
+              const lat = j.gps.lat;
+              const lon = j.gps.lon;
+              map = L.map('map', {scrollWheelZoom: false, attributionControl: true}).setView([lat, lon], 13);
+              marker = L.marker([lat, lon], {keyboard: true, alt: 'Photo location marker'}).addTo(map)
+                .bindPopup(`<strong>Location:</strong><br>${lat.toFixed(6)}, ${lon.toFixed(6)}`).openPopup();
+            } else {
+              map = L.map('map', {scrollWheelZoom: false, attributionControl: true}).setView([0, 0], 2);
+            }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors',
+              errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEDQIHq4C7sgAAAABJRU5ErkJggg=='
+            }).addTo(map);
+            setTimeout(() => { map.invalidateSize(); }, 200);
+          } catch (e) {
+            console.error('Map rendering error:', e);
+            MAP.innerHTML = `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map could not be rendered:</strong> ${e.message}</div>`;
+          }
+        } else {
+          console.error('Leaflet not loaded or map container not found');
+          MAP.innerHTML = `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map library not loaded.</strong></div>`;
+        }
+      }, 300);
+      RAW.textContent = JSON.stringify(j.metadata, null, 2);
+      if (j.metadata && j.metadata.exif_orig) {
+        MC.innerHTML += '<button type="button" class="collapsible" aria-expanded="false">Original EXIF Metadata</button>';
+        MC.innerHTML += '<div class="collapsible-content" aria-hidden="true"><pre>' + JSON.stringify(j.metadata.exif_orig || {}, null, 2) + '</pre></div>';
+      }
+      // --- Re-initialize collapsibles after dynamic content injection ---
+      initCollapsibles();
+    }
   </script>
 </body>
 </html>

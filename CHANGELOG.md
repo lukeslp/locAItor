@@ -10,4 +10,8 @@
 - Added /report endpoint to download the last analysis as JSON.
 - Added /logs endpoint to download the current server log file.
 - Frontend: Added accessible Download Report and Download Logs buttons below metadata section.
-- All new features are accessible (ARIA labels, keyboard, alerts for errors). 
+- All new features are accessible (ARIA labels, keyboard, alerts for errors).
+- Always display a map: shows world map if no GPS, or location if GPS present.
+- Show both original and processed EXIF metadata in the UI for transparency.
+- Accessibility: ARIA/alt text for map and metadata, keyboard navigation for map marker.
+- Fixed: Consistent GPS extraction: now always uses original image bytes for EXIF/GPS, preventing mismatches between LLM and UI. 
