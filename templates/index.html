@@ -18,7 +18,8 @@
     <div class="upload-section">
       <div id="dropZone" class="upload-dropzone">Drag &amp; drop an image here<br>or click to choose one</div>
       <input type="file" id="fileInput" accept="image/*"/>
-      <div class="profile-image-wrapper">
+      <div id="progressIndicator" class="progress-indicator" style="display:none;">Ready</div>
+      <div class="profile-image-wrapper" id="profileImageWrapper" style="display:none;">
         <img id="preview" class="profile-image" tabindex="0" alt="Image preview"/>
       </div>
     </div>
@@ -55,6 +56,8 @@
     const DZ = document.getElementById('dropZone'),
           FI = document.getElementById('fileInput'),
           PV = document.getElementById('preview'),
+          PI = document.getElementById('progressIndicator'),
+          PIW = document.getElementById('profileImageWrapper'),
           RS = document.getElementById('llm-output'),
           md = window.markdownit(),
           MS = document.getElementById('metaSection'),
@@ -97,10 +100,12 @@
 
     async function handleImage(file) {
       DZ.style.display = 'none';
+      PIW.style.display = 'none'; // Hide image preview area
       PV.style.display = 'none';
       PV.src = '';
+      if (PI) { PI.style.display = 'block'; PI.textContent = 'Uploading image...'; }
       if (RS) {
-        RS.style.display = 'none'; // Hide LLM output area until content
+        RS.style.display = 'none';
         RS.textContent   = '';
       }
       MS.style.display = 'none';
@@ -114,17 +119,22 @@
       const isHeic = file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic');
       if (isHeic && window.heic2any) {
         try {
+          if (PI) PI.textContent = 'Converting HEIC image...';
           const blob = await heic2any({ blob: file, toType: 'image/jpeg' });
           PV.src = URL.createObjectURL(blob);
           PV.style.display = 'block';
+          PIW.style.display = 'block';
         } catch (e) {
           PV.style.display = 'none';
+          PIW.style.display = 'none';
           PV.alt = 'Preview not available (HEIC conversion failed)';
         }
       } else {
         PV.src = URL.createObjectURL(file);
         PV.style.display = 'block';
+        PIW.style.display = 'block';
       }
+      if (PI) PI.textContent = 'Analyzing image metadata...';
 
       const form = new FormData();
       form.append('image', file);
@@ -136,6 +146,7 @@
           const resp = await fetch('/analyze?stream=1', { method:'POST', body: form });
           if (resp.ok && resp.body && resp.headers.get('content-type') === 'text/plain') {
             streamed = true;
+            let progressState = 0;
             const reader = resp.body.getReader();
             let decoder = new TextDecoder();
             let text = '';
@@ -146,6 +157,7 @@
               if (done) break;
               const chunk = decoder.decode(value, {stream:true});
               if (firstChunk) {
+                if (PI) PI.textContent = 'Processing with AI...';
                 const nlIdx = chunk.indexOf('\n');
                 let metaLine = chunk, rest = '';
                 if (nlIdx !== -1) {
@@ -155,48 +167,58 @@
                 try {
                   metaObj = JSON.parse(metaLine);
                   renderMetadata(metaObj); // Show metadata/map immediately
+                  if (PI) PI.textContent = 'Waiting for AI response...';
                 } catch (e) {
                   MC.innerHTML = '<div style="color:#b00;">Failed to parse metadata from server.</div>';
+                  if (PI) PI.textContent = 'Error parsing metadata.';
                 }
                 if (rest) {
                   text += rest;
                   RS.innerHTML = md.render(text);
-                  RS.style.display = 'block'; // Show LLM output area when content is available
+                  RS.style.display = 'block';
+                  if (PI) PI.style.display = 'none';
                 }
                 firstChunk = false;
               } else {
                 text += chunk;
                 RS.innerHTML = md.render(text);
-                RS.style.display = 'block'; // Show LLM output area when content is available
+                RS.style.display = 'block';
+                if (PI) PI.style.display = 'none';
               }
             }
+            if (PI) PI.style.display = 'none';
             return;
           }
         }
         if (!streamed) {
+          if (PI) PI.textContent = 'Processing with AI...';
           const resp = await fetch('/analyze', { method:'POST', body: form });
           const j    = await resp.json();
           if (j.error) {
             RS.innerHTML = `<div style='color:#b00;'>${j.error}</div>`;
             RS.style.display = 'block';
             MS.style.display = 'none';
+            if (PI) PI.style.display = 'none';
             return;
           }
           if (!j.metadata) {
             RS.innerHTML = `<div style='color:#b00;'>No metadata returned from server.</div>`;
             RS.style.display = 'block';
             MS.style.display = 'none';
+            if (PI) PI.style.display = 'none';
             return;
           }
           renderMetadata(j); // Show metadata/map first
           const text = j.content || j.error;
           RS.innerHTML = md.render(text);
           RS.style.display = 'block';
+          if (PI) PI.style.display = 'none';
         }
       } catch (err) {
         RS.textContent = 'Error: ' + err.message;
         RS.style.display = 'block';
         MS.style.display = 'none';
+        if (PI) PI.style.display = 'none';
       }
     }
 
