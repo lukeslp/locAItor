@@ -175,14 +175,14 @@
                 if (rest) {
                   text += rest;
                   RS.innerHTML = md.render(text);
-                  RS.style.display = 'block';
+                  RS.style.display = text.trim() ? 'block' : 'none';
                   if (PI) PI.style.display = 'none';
                 }
                 firstChunk = false;
               } else {
                 text += chunk;
                 RS.innerHTML = md.render(text);
-                RS.style.display = 'block';
+                RS.style.display = text.trim() ? 'block' : 'none';
                 if (PI) PI.style.display = 'none';
               }
             }
@@ -211,7 +211,7 @@
           renderMetadata(j); // Show metadata/map first
           const text = j.content || j.error;
           RS.innerHTML = md.render(text);
-          RS.style.display = 'block';
+          RS.style.display = text && text.trim() ? 'block' : 'none';
           if (PI) PI.style.display = 'none';
         }
       } catch (err) {

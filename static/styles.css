@@ -1,11 +1,11 @@
-/* Base styles */
+/* Light mode base styles */
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
   font-family: 'Inter', system-ui, sans-serif;
-  background: #101114;
-  color: #181A1B;
+  background: #fff !important;
+  color: #181A1B !important;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -17,10 +17,10 @@ html, body {
   max-width: 1000px;
   margin: 3rem auto;
   padding: 2.5rem 2rem 2rem 2rem;
-  background: #23272A;
+  background: #fff !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   border-radius: 28px;
-  color: #F5F5F5;
+  color: #181A1B !important;
 }
 
 .main-container {
@@ -75,13 +75,13 @@ html, body {
 
 /* Drop zones */
 #dropZone, .upload-dropzone {
-  border: 2.5px dashed #444;
+  border: 2.5px dashed #444 !important;
   border-radius: 18px;
-  background: #181A1B;
+  background: #fff !important;
   cursor: pointer;
   transition: border-color 0.3s, background 0.3s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  color: #F5F5F5;
+  color: #181A1B !important;
   font-weight: 500;
   margin-bottom: 1.5rem;
   display: flex;
@@ -104,8 +104,8 @@ html, body {
 }
 
 #dropZone.dragover, .upload-dropzone.dragover {
-  border-color: #FFD54F;
-  background: #23272A;
+  border-color: #FFD54F !important;
+  background: #f5f5f5 !important;
 }
 
 /* Buttons */
@@ -149,8 +149,8 @@ input[type="file"] {
   display: none;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.25);
-  background: #181A1B;
-  border: 2.5px solid #FFD54F;
+  background: #fff !important;
+  border: 2.5px solid #FFD54F !important;
   position: relative;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
@@ -177,7 +177,7 @@ input[type="file"] {
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: #f5f5f5;
+  background: #fff !important;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
   position: relative;
   overflow: hidden;
@@ -204,12 +204,12 @@ input[type="file"] {
 
 /* Results and output sections */
 #result, .llm-streaming-response, #llm-output {
-  background: #181A1B;
+  background: #fff !important;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.13);
   text-align: left;
   font-family: 'Inter', system-ui, sans-serif;
-  color: #F5F5F5;
+  color: #181A1B !important;
 }
 
 #result {
@@ -226,10 +226,10 @@ input[type="file"] {
   padding: 1.2rem;
   margin-bottom: 1.5rem;
   font-size: 1.15rem;
-  color: #FFD54F;
+  color: #181A1B !important;
   min-height: 2.5em;
   word-break: break-word;
-  border: 1.5px solid #FFD54F;
+  border: none !important;
 }
 
 #llm-output {
@@ -237,7 +237,7 @@ input[type="file"] {
 }
 
 #result p, #result ul, #result ol, #result li {
-  color: #F5F5F5;
+  color: #181A1B !important;
 }
 
 /* Meta sections */
@@ -245,14 +245,14 @@ input[type="file"] {
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 1.08rem;
   margin-top: 2rem;
-  background: #fff;
+  background: #fff !important;
   border-radius: 16px;
   padding: 1.5rem 1.2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  color: #181A1B;
+  color: #181A1B !important;
   width: 100%;
   max-width: 700px;
-  border: none;
+  border: none !important;
 }
 
 #metaSection .button-row {
@@ -286,8 +286,8 @@ input[type="file"] {
 
 /* Collapsible sections */
 .collapsible {
-  background-color: #23272A;
-  color: #FFD54F;
+  background-color: #fff !important;
+  color: #181A1B !important;
   cursor: pointer;
   padding: 1.1em 1.3em;
   width: 100%;
@@ -299,7 +299,7 @@ input[type="file"] {
   border-radius: 10px;
   margin: 1em 0 0 0;
   transition: background 0.2s, color 0.2s;
-  box-shadow: 0 1px 2px #181A1B;
+  box-shadow: none !important;
   position: relative;
   letter-spacing: 0.01em;
 }
@@ -307,14 +307,14 @@ input[type="file"] {
 .collapsible:after {
   content: '\02795';
   font-size: 1.1em;
-  color: #FFD54F;
+  color: #FFD54F !important;
   float: right;
   margin-left: 8px;
 }
 
 .active, .collapsible:hover, .collapsible:focus {
-  background-color: #181A1B;
-  color: #FFD54F;
+  background-color: #f8f8f8 !important;
+  color: #181A1B !important;
 }
 
 .active:after {
@@ -325,17 +325,17 @@ input[type="file"] {
   padding: 1em 1.3em 1.3em 1.3em;
   display: none;
   overflow: hidden;
-  background-color: #23272A;
+  background-color: #fff !important;
   border-radius: 0 0 10px 10px;
   margin-bottom: 1em;
-  color: #F5F5F5;
+  color: #181A1B !important;
   font-size: 1.04rem;
-  box-shadow: 0 1px 2px #181A1B;
+  box-shadow: none !important;
 }
 
 .collapsible-content pre {
-  background: #181A1B;
-  color: #FFD54F;
+  background: #f8f8f8 !important;
+  color: #181A1B !important;
   border-radius: 6px;
   padding: 0.7em;
   font-size: 1em;
@@ -360,11 +360,11 @@ input[type="file"] {
 .provenance-list li {
   margin: 0.3em 0;
   padding: 0.3em 0.7em;
-  background: #181A1B;
+  background: #f8f8f8 !important;
   border-radius: 6px;
   font-size: 1em;
-  color: #FFD54F;
-  box-shadow: 0 1px 2px #23272A;
+  color: #181A1B !important;
+  box-shadow: none !important;
   display: flex;
   align-items: center;
   gap: 0.7em;
@@ -382,18 +382,18 @@ input[type="file"] {
   box-shadow: 0 1px 8px #181A1B;
   margin-top: 0.7em;
   min-height: 350px;
-  background: #181A1B;
+  background: #fff !important;
 }
 
 .leaflet-container {
-  background: #181A1B !important;
+  background: #fff !important;
   color-scheme: dark;
   border-radius: 12px;
 }
 
 .leaflet-control-attribution {
-  color: #FFD54F !important;
-  background: #23272A !important;
+  color: #181A1B !important;
+  background: #f8f8f8 !important;
   font-size: 0.95em;
   border-radius: 0 0 8px 8px;
 }
@@ -473,10 +473,10 @@ input[type="file"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #fff;
-  border-radius: 18px;
+  background: #fff !important;
+  color: #181A1B !important;
+  border: none !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  color: #181A1B;
   padding: 2rem 1.5rem 1.5rem 1.5rem;
 }
 
@@ -487,11 +487,21 @@ input[type="file"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #fff;
-  border-radius: 18px;
+  background: #fff !important;
+  color: #181A1B !important;
+  border: none !important;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  color: #181A1B;
   padding: 2rem 1.5rem 1.5rem 1.5rem;
+}
+
+/* Remove border-radius if you want sharp corners, or keep for soft card look */
+.upload-section, .results-section, #metaSection, .profile-image-wrapper, .llm-streaming-response, #llm-output {
+  border-radius: 18px;
+}
+
+/* Remove any border from .upload-dropzone */
+.upload-dropzone {
+  border: none !important;
 }
 
 /* Responsive styles */
@@ -530,4 +540,26 @@ input[type="file"] {
     max-height: 60vh;
     border-radius: 12px;
   }
+}
+
+/* Remove any dark backgrounds from map and leaflet */
+#map, .leaflet-container {
+  background: #fff !important;
+  color: #181A1B !important;
+}
+
+.leaflet-control-attribution {
+  color: #181A1B !important;
+  background: #f8f8f8 !important;
+}
+
+/* Remove dark backgrounds from pre/code blocks */
+.collapsible-content pre {
+  background: #f8f8f8 !important;
+  color: #181A1B !important;
+}
+
+/* Remove any remaining dark backgrounds */
+body * {
+  background-color: initial;
 }
