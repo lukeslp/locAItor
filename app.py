@@ -3,7 +3,7 @@ import os
 import base64
 import requests
 from io import BytesIO
-from flask import Flask, request, jsonify, render_template, send_from_directory, stream_with_context, Response
+from flask import Flask, request, jsonify, render_template, send_from_directory, stream_with_context, Response, Blueprint
 from flask_cors import CORS
 from PIL import Image, ExifTags, ImageCms
 import xml.etree.ElementTree as ET
@@ -17,7 +17,15 @@ CORS(app)
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-@app.route('/favicon.ico')
+# --- All routes are now under /locaitor via Blueprint for reverse proxy compatibility ---
+main = Blueprint(
+    'main',
+    __name__,
+    static_folder='static',
+    static_url_path='/static'
+)
+
+@main.route('/favicon.ico')
 def favicon():
     return send_from_directory(
         os.path.join(app.root_path, 'static'),
@@ -177,7 +185,7 @@ def detect_ai_generator(exif, xmp_icc, provenance):
         return None, "No camera, software, date/time, GPS, or thumbnail metadata; possibly synthetic, but not conclusive."
     return False, "No AI generator tags or suspicious provenance found."
 
-@app.route('/')
+@main.route('/')
 def index():
     return render_template('index.html')
 
@@ -330,7 +338,37 @@ def stream_metadata_and_llm(metadata, gps_coords, address, llm_stream):
     for chunk in llm_stream:
         yield chunk
 
-@app.route('/analyze', methods=['POST'])
+# Utility: Recursively convert IFDRational and other non-serializable types to float/int/str
+
+def make_json_serializable(obj):
+    """
+    Recursively convert IFDRational, bytes, and other non-serializable types in EXIF dicts to float/int/str.
+    """
+    try:
+        from PIL.TiffImagePlugin import IFDRational
+    except ImportError:
+        IFDRational = None
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [make_json_serializable(v) for v in obj]
+    elif IFDRational and isinstance(obj, IFDRational):
+        return float(obj)
+    elif 'IFDRational' in str(type(obj)):
+        try:
+            return float(obj)
+        except Exception:
+            return str(obj)
+    elif isinstance(obj, bytes):
+        # For small blobs, base64 encode; for large, just note it's bytes
+        if len(obj) < 128:
+            return base64.b64encode(obj).decode('utf-8')
+        else:
+            return f"<{len(obj)} bytes>"
+    else:
+        return obj
+
+@main.route('/analyze', methods=['POST'])
 def analyze():
     try:
         global last_analysis_result
@@ -342,29 +380,61 @@ def analyze():
         raw_orig = image.read()  # Save original bytes
         orig_format = image.mimetype
         heic_exif = {}
+        img_format = None
+        img = None
 
         # --- HEIC/Conversion/Resize Handling ---
+        heic_error = None
+        is_heic = orig_format in ('image/heic', 'image/heif') or (image.filename and image.filename.lower().endswith('.heic'))
         try:
             img = Image.open(BytesIO(raw_orig))
             logger.info(f"Image opened: format={img.format}, mimetype={orig_format}, size={img.size}")
-        except UnidentifiedImageError as e:
-            logger.error(f"Unsupported image format or corrupted file: {e}")
-            return jsonify({'error': 'Unsupported image format or corrupted file.'}), 400
-
-        # Extract EXIF from HEIC before conversion
-        if img.format == 'HEIC' or orig_format in ('image/heic', 'image/heif'):
-            logger.info('Attempting HEIC EXIF extraction.')
-            if pyheif:
-                heic_exif = extract_exif_heic(raw_orig)
-            if not pillow_heif:
-                logger.error('HEIC support not installed (pillow-heif missing).')
-                return jsonify({'error': 'HEIC support not installed. Please install pillow-heif.'}), 400
-            img = img.convert('RGB')
-            img_format = 'JPEG'
-        else:
             img_format = img.format if img.format in ('JPEG', 'PNG') else 'JPEG'
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
+        except UnidentifiedImageError as e:
+            img = None
+            img_format = None
+            heic_error = str(e)
+
+        # Always extract HEIC EXIF if the image is HEIC, regardless of how it was opened
+        if is_heic:
+            heic_exif = extract_exif_heic(raw_orig)
+            if 'error' in heic_exif:
+                logger.error(f"HEIC EXIF extraction failed: {heic_exif['error']}")
+
+        # If PIL failed to open, try pyheif/pillow-heif for image conversion
+        if img is None or img_format is None:
+            if pyheif and is_heic:
+                try:
+                    heif_file = pyheif.read_heif(raw_orig)
+                    from PIL import Image as PILImage
+                    img = PILImage.frombytes(
+                        heif_file.mode,
+                        heif_file.size,
+                        heif_file.data,
+                        "raw"
+                    )
+                    logger.info("HEIC image opened via pyheif.")
+                    img_format = 'JPEG'
+                except Exception as he:
+                    heic_error = str(he)
+            elif pillow_heif and is_heic:
+                try:
+                    heif_file = pillow_heif.read_heif(raw_orig)
+                    img = Image.frombytes(
+                        heif_file.mode,
+                        heif_file.size,
+                        heif_file.data,
+                        "raw"
+                    )
+                    logger.info("HEIC image opened via pillow-heif.")
+                    img_format = 'JPEG'
+                except Exception as he:
+                    heic_error = str(he)
+
+        # Final check before proceeding (outside try/except)
+        if img is None or img_format is None:
+            logger.error(f'Image could not be opened or format could not be determined. {heic_error or ""}')
+            return jsonify({'error': f'Image could not be opened or format could not be determined. {heic_error or ""}'}), 400
 
         # Extract EXIF and GPS from original bytes (before conversion)
         exif_orig = extract_exif(raw_orig)
@@ -393,10 +463,17 @@ def analyze():
         is_ai, ai_reason = detect_ai_generator(exif, xmp_icc, provenance)
         logger.info(f"AI detection: {is_ai}, Reason: {ai_reason}")
 
+        # --- Make all metadata JSON serializable ---
+        exif = make_json_serializable(exif)
+        exif_orig = make_json_serializable(exif_orig)
+        heic_exif = make_json_serializable(heic_exif)
+        xmp_icc = make_json_serializable(xmp_icc)
+        provenance = make_json_serializable(provenance)
+
         # --- Compose full metadata for LLM and frontend ---
         all_metadata = package_metadata(exif, exif_orig, heic_exif, xmp_icc, provenance, is_ai, ai_reason)
 
-        # --- Modular GPS extraction: try all sources ---
+        # --- Modular GPS extraction: try all sources (HEIC EXIF prioritized) ---
         exif_sources = [
             ('heic_exif', heic_exif),
             ('exif_orig', exif_orig),
@@ -473,7 +550,7 @@ def analyze():
 
         # --- Reverse geocode if possible ---
         address = None
-        if gps_coords and gps_coords['lat'] and gps_coords['lon']:
+        if gps_coords and gps_coords.get('lat') and gps_coords.get('lon'):
             try:
                 url = (
                     f'https://nominatim.openstreetmap.org/reverse?format=json'
@@ -505,7 +582,8 @@ def analyze():
         # If client requests streaming, use streaming response
         if request.args.get('stream') == '1':
             try:
-                return Response(stream_with_context(stream_metadata_and_llm(all_metadata, gps_coords, address, llm_stream())), mimetype='text/plain')
+                # Include GPS source in the streamed metadata
+                return Response(stream_with_context(stream_metadata_and_llm({**all_metadata, 'gps_source': gps_source}, gps_coords, address, llm_stream())), mimetype='text/plain')
             except Exception as e:
                 logger.error(f"Streaming error: {e}")
                 return Response(f"[Error streaming: {e}]", mimetype='text/plain')
@@ -528,7 +606,7 @@ def analyze():
             logger.info(f"xAI API response received.")
             result = {
                 "content": answer,
-                "metadata": all_metadata,
+                "metadata": {**all_metadata, 'gps_source': gps_source},
                 "gps": gps_coords,
                 "address": address
             }
@@ -541,7 +619,7 @@ def analyze():
         logger.error(f"/analyze endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/report', methods=['GET'])
+@main.route('/report', methods=['GET'])
 def download_report():
     """
     Download the last analysis as a JSON file.
@@ -554,7 +632,7 @@ def download_report():
     response.headers['Content-Disposition'] = 'attachment; filename=analysis_report.json'
     return response
 
-@app.route('/logs', methods=['GET'])
+@main.route('/logs', methods=['GET'])
 def download_logs():
     """
     Download the current log file.
@@ -565,7 +643,7 @@ def download_logs():
     return send_from_directory(os.path.dirname(log_path), os.path.basename(log_path), as_attachment=True)
 
 # --- Reverse Geocoding Endpoint ---
-@app.route('/reverse_geocode')
+@main.route('/reverse_geocode')
 def reverse_geocode():
     lat = request.args.get('lat')
     lon = request.args.get('lon')
@@ -576,6 +654,9 @@ def reverse_geocode():
     if r.ok:
         return jsonify(r.json())
     return jsonify({'error': 'Reverse geocoding failed'}), 502
+
+# Register the Blueprint with the /locaitor prefix
+app.register_blueprint(main, url_prefix='/locaitor')
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5002, debug=True)

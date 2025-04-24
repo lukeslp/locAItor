@@ -6,7 +6,7 @@
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Use Flask's url_for for static asset handling -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('main.static', filename='styles.css') }}">
   <!-- markdown-it for rendering -->
   <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
@@ -143,7 +143,7 @@
         // Streaming LLM answer with metadata-first protocol
         let streamed = false;
         if (window.ReadableStream) {
-          const resp = await fetch('/analyze?stream=1', { method:'POST', body: form });
+          const resp = await fetch('/locaitor/analyze?stream=1', { method:'POST', body: form });
           if (resp.ok && resp.body && resp.headers.get('content-type') === 'text/plain') {
             streamed = true;
             let progressState = 0;
@@ -192,7 +192,7 @@
         }
         if (!streamed) {
           if (PI) PI.textContent = 'Processing with AI...';
-          const resp = await fetch('/analyze', { method:'POST', body: form });
+          const resp = await fetch('/locaitor/analyze', { method:'POST', body: form });
           const j    = await resp.json();
           if (j.error) {
             RS.innerHTML = `<div style='color:#b00;'>${j.error}</div>`;
@@ -229,7 +229,7 @@
       if (reportBtn) {
         reportBtn.onclick = async function() {
           try {
-            const resp = await fetch('/report');
+            const resp = await fetch('/locaitor/report');
             if (!resp.ok) throw new Error('No report available yet.');
             const blob = await resp.blob();
             const url = URL.createObjectURL(blob);
@@ -247,7 +247,7 @@
       if (logsBtn) {
         logsBtn.onclick = async function() {
           try {
-            const resp = await fetch('/logs');
+            const resp = await fetch('/locaitor/logs');
             if (!resp.ok) throw new Error('No logs available.');
             const disposition = resp.headers.get('Content-Disposition');
             let filename = 'app.log';
