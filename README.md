@@ -65,6 +65,14 @@ A Flask-based demo app to pinpoint where a photo was taken using both visual cue
 }
 ```
 
+### `GET /report`
+- Returns the last analysis as a downloadable JSON file.
+- If no analysis has been performed, returns a 404 with an error message.
+
+### `GET /logs`
+- Returns the current server log file for download.
+- If the log file is missing, returns a 404 with an error message.
+
 ---
 
 ## Accessibility Considerations
@@ -72,6 +80,9 @@ A Flask-based demo app to pinpoint where a photo was taken using both visual cue
 - All API responses are structured for easy parsing and screen reader compatibility.
 - The frontend (see `templates/index.html`) uses semantic HTML, ARIA roles, and high-contrast color schemes.
 - Error messages are clear and accessible.
+- All new buttons are keyboard accessible and have ARIA labels.
+- Download actions provide alerts if unavailable.
+- No visual-only cues; all actions are announced or visible in text.
 
 ---
 
@@ -107,3 +118,16 @@ A CLI test script (`cli_test.py`) will allow you to:
 - Validate metadata extraction, AI detection, and API response
 - Test image resizing/conversion pipeline
 - Run batch tests for regression and automation 
+
+## New Features (Unreleased)
+
+- **Expanded Provenance Fields:**
+  - The backend now extracts additional provenance and metadata fields from EXIF and XMP, including copyright, artist, camera/lens serial, lens info, owner, exposure, ISO, and more. These are shown in the frontend under Provenance.
+- **Downloadable Reports and Logs:**
+  - After analyzing an image, you can now download a JSON report of the last analysis or the server log file directly from the frontend.
+  - Endpoints:
+    - `GET /report` — Download the last analysis as a JSON file.
+    - `GET /logs` — Download the current server log file.
+- **Frontend Buttons:**
+  - "Download Report" and "Download Logs" buttons are available below the metadata section after analysis.
+  - Buttons are accessible (keyboard/ARIA labels) and work with screen readers. 

@@ -7,9 +7,16 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from PIL import Image, ExifTags, ImageCms
 import xml.etree.ElementTree as ET
+import logging
+import tempfile
+import json
 
 app = Flask(__name__)
 CORS(app)
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+logger = logging.getLogger(__name__)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -26,15 +33,21 @@ MODEL       = os.getenv('XAI_MODEL', 'grok-2-vision')
 
 SYSTEM_PROMPT = (
     "You are an assistant that pinpoints exactly where a photo was taken. "
-    "Give the most specific location you can (landmarks, city, region)."
+    "Give the most specific location you can (landmarks, city, region). "
+    "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
+    "clearly state so and explain your reasoning. Always use both visual cues and all available metadata, including EXIF, HEIC EXIF, XMP, ICC, and provenance fields. "
+    "You will be provided with a full metadata JSON block. Use all available metadata in your answer, and cite any relevant fields. "
+    "If HEIC metadata is present, use it as well. Summarize any provenance or software information you find."
 )
 
 def extract_exif(image_bytes):
     try:
         img = Image.open(BytesIO(image_bytes))
         exif = img._getexif() or {}
+        logger.info(f"EXIF extracted: {list(exif.keys())}")
         return { ExifTags.TAGS.get(k, k): v for k, v in exif.items() }
-    except:
+    except Exception as e:
+        logger.error(f"EXIF extraction failed: {e}")
         return {}
 
 def parse_gps(exif):
@@ -76,7 +89,7 @@ def extract_xmp_icc(image_bytes):
 
 def extract_provenance(image_bytes, exif, xmp_icc):
     """
-    Extract provenance info: software, creator tool, ICC desc, C2PA, etc.
+    Extract provenance info: software, creator tool, ICC desc, C2PA, and additional fields.
     Returns a dict of provenance fields.
     """
     provenance = {}
@@ -92,6 +105,13 @@ def extract_provenance(image_bytes, exif, xmp_icc):
         # C2PA/CAI signature
         if 'c2pa.org' in xmp_icc['xmp'].lower() or 'contentauthenticity.org' in xmp_icc['xmp'].lower():
             provenance['c2pa'] = True
+        # XMP Copyright
+        m = re.search(r'<dc:rights[^>]*>(.*?)</dc:rights>', xmp_icc['xmp'])
+        if m:
+            provenance['copyright_xmp'] = m.group(1)
+        m = re.search(r'<dc:creator[^>]*>(.*?)</dc:creator>', xmp_icc['xmp'])
+        if m:
+            provenance['creator_xmp'] = m.group(1)
     # ICC profile description
     if 'icc' in xmp_icc and xmp_icc['icc']:
         provenance['icc'] = xmp_icc['icc']
@@ -100,6 +120,16 @@ def extract_provenance(image_bytes, exif, xmp_icc):
         provenance['thumbnail'] = True
     # FileSource, SceneType, ProcessingSoftware, HostComputer
     for tag in ['FileSource', 'SceneType', 'ProcessingSoftware', 'HostComputer']:
+        if tag in exif:
+            provenance[tag.lower()] = exif[tag]
+    # Additional EXIF provenance fields
+    extra_tags = [
+        'Copyright', 'Artist', 'CameraOwnerName', 'BodySerialNumber', 'LensModel',
+        'LensSerialNumber', 'Make', 'Model', 'ExposureTime', 'FNumber', 'ISOSpeedRatings',
+        'FocalLength', 'WhiteBalance', 'MeteringMode', 'Flash', 'Orientation', 'ImageDescription',
+        'OwnerName', 'SerialNumber', 'LensMake', 'LensSpecification', 'DateTimeOriginal', 'DateTimeDigitized'
+    ]
+    for tag in extra_tags:
         if tag in exif:
             provenance[tag.lower()] = exif[tag]
     return provenance
@@ -172,33 +202,78 @@ from PIL import UnidentifiedImageError
 MAX_DIM = 2048
 MAX_SIZE = 10 * 1024 * 1024  # 10 MiB
 
+def extract_exif_exiftool(image_bytes: bytes) -> dict:
+    """
+    Extract EXIF from image bytes using exiftool CLI (fallback for HEIC/HEIF).
+    Returns a dict of EXIF tags, or an error dict.
+    """
+    import subprocess, json, os
+    with tempfile.NamedTemporaryFile(suffix='.heic', delete=False) as tmp:
+        tmp.write(image_bytes)
+        tmp_path = tmp.name
+    try:
+        result = subprocess.run(['exiftool', '-j', tmp_path], capture_output=True, text=True, check=True)
+        exif = json.loads(result.stdout)[0]
+    except Exception as e:
+        exif = {'error': f'exiftool failed: {e}'}
+    finally:
+        os.remove(tmp_path)
+    return exif
+
 def extract_exif_heic(image_bytes):
     """
-    Extract EXIF from HEIC using pyheif if available.
-    Returns a dict of EXIF tags, or empty dict if not found.
+    Try to extract EXIF from HEIC using pillow-heif, pyheif, or exiftool as fallback.
+    Returns a dict of EXIF tags, or a user-friendly error if not possible.
     """
-    if not pyheif:
-        return {}
+    # Try pillow-heif first
     try:
+        import pillow_heif
+        heif_file = pillow_heif.read_heif(image_bytes)
+        if heif_file.info.get('exif'):
+            from PIL import Image
+            import piexif
+            exif_dict = piexif.load(heif_file.info['exif'])
+            flat = {}
+            for ifd in exif_dict:
+                for tag, val in exif_dict[ifd].items():
+                    tag_name = piexif.TAGS[ifd][tag]["name"] if tag in piexif.TAGS[ifd] else tag
+                    flat[f"{ifd}:{tag_name}"] = val
+            logger.info("HEIC EXIF extracted via pillow-heif.")
+            return flat
+    except Exception as e:
+        logger.warning(f"pillow-heif HEIC EXIF extraction failed: {e}")
+    # Fallback to pyheif
+    try:
+        import pyheif
         heif_file = pyheif.read_heif(image_bytes)
         for md in heif_file.metadata or []:
             if md['type'] == 'Exif':
                 import piexif
                 exif_dict = piexif.load(md['data'])
-                # Flatten exif_dict for easier display
                 flat = {}
                 for ifd in exif_dict:
                     for tag, val in exif_dict[ifd].items():
                         tag_name = piexif.TAGS[ifd][tag]["name"] if tag in piexif.TAGS[ifd] else tag
                         flat[f"{ifd}:{tag_name}"] = val
+                logger.info("HEIC EXIF extracted via pyheif.")
                 return flat
     except Exception as e:
-        return {"error": str(e)}
-    return {}
+        logger.error(f"pyheif HEIC EXIF extraction failed: {e}")
+    # Fallback to exiftool
+    logger.info("Trying exiftool fallback for HEIC EXIF extraction.")
+    exif = extract_exif_exiftool(image_bytes)
+    if 'error' in exif:
+        return {"error": f"HEIC EXIF extraction failed due to library incompatibility and exiftool fallback: {exif['error']}"}
+    return exif
+
+# Store last analysis for report download
+last_analysis_result = None
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    global last_analysis_result
     if 'image' not in request.files:
+        logger.error('No image provided in request.')
         return jsonify({'error': 'No image provided'}), 400
 
     image = request.files['image']
@@ -209,14 +284,18 @@ def analyze():
     # --- HEIC/Conversion/Resize Handling ---
     try:
         img = Image.open(BytesIO(raw))
-    except UnidentifiedImageError:
+        logger.info(f"Image opened: format={img.format}, mimetype={orig_format}, size={img.size}")
+    except UnidentifiedImageError as e:
+        logger.error(f"Unsupported image format or corrupted file: {e}")
         return jsonify({'error': 'Unsupported image format or corrupted file.'}), 400
 
     # Extract EXIF from HEIC before conversion
     if img.format == 'HEIC' or orig_format in ('image/heic', 'image/heif'):
+        logger.info('Attempting HEIC EXIF extraction.')
         if pyheif:
             heic_exif = extract_exif_heic(raw)
         if not pillow_heif:
+            logger.error('HEIC support not installed (pillow-heif missing).')
             return jsonify({'error': 'HEIC support not installed. Please install pillow-heif.'}), 400
         img = img.convert('RGB')
         img_format = 'JPEG'
@@ -229,6 +308,7 @@ def analyze():
     if max(img.size) > MAX_DIM:
         scale = MAX_DIM / max(img.size)
         new_size = (int(img.size[0]*scale), int(img.size[1]*scale))
+        logger.info(f"Resizing image from {img.size} to {new_size}")
         img = img.resize(new_size, Image.LANCZOS)
 
     # Save to bytes (JPEG, quality=90)
@@ -237,6 +317,7 @@ def analyze():
     buf.seek(0)
     raw = buf.read()
     if len(raw) > MAX_SIZE:
+        logger.error('Image too large after conversion (max 10MiB).')
         return jsonify({'error': 'Image too large after conversion (max 10MiB).'}), 400
 
     # EXIF, XMP, ICC extraction now uses processed bytes
@@ -244,6 +325,7 @@ def analyze():
     xmp_icc = extract_xmp_icc(raw)
     provenance = extract_provenance(raw, exif, xmp_icc)
     is_ai, ai_reason = detect_ai_generator(exif, xmp_icc, provenance)
+    logger.info(f"AI detection: {is_ai}, Reason: {ai_reason}")
 
     # Merge all metadata
     all_metadata = {
@@ -285,15 +367,6 @@ def analyze():
     # Data URL
     data_url = f"data:image/{img_format.lower()};base64,{base64.b64encode(raw).decode()}"
 
-    # Enhanced system prompt
-    SYSTEM_PROMPT = (
-        "You are an assistant that pinpoints exactly where a photo was taken. "
-        "Give the most specific location you can (landmarks, city, region). "
-        "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
-        "clearly state so and explain your reasoning. Always use both visual cues and all available metadata. "
-        "Also, summarize any provenance or software information you find."
-    )
-
     # Payload (no max_tokens)
     payload = {
         "model": MODEL,
@@ -305,6 +378,7 @@ def analyze():
               "role": "user",
               "content": [
                 {"type": "text", "text": metadata_str},
+                {"type": "text", "text": "Full metadata (JSON):\n" + json.dumps(all_metadata, indent=2)},
                 {"type": "text", "text": f"Where exactly was this photo taken? Use visual cues and embedded metadata. Also, does this image appear to be AI-generated or synthetic? Explain your reasoning. AI detection reason: {ai_reason}. Provenance: {provenance}"},
                 {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}}
               ]
@@ -322,13 +396,39 @@ def analyze():
         r.raise_for_status()
         data   = r.json()
         answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return jsonify({
+        logger.info(f"xAI API response received.")
+        result = {
             "content": answer,
             "metadata": all_metadata,
             "gps": gps_coords
-        })
+        }
+        last_analysis_result = result  # Store for report download
+        return jsonify(result)
     except requests.RequestException as e:
+        logger.error(f"xAI API request failed: {e}")
         return jsonify({"error": str(e)}), 502
+
+@app.route('/report', methods=['GET'])
+def download_report():
+    """
+    Download the last analysis as a JSON file.
+    """
+    from flask import Response
+    if not last_analysis_result:
+        return jsonify({'error': 'No analysis available yet.'}), 404
+    response = Response(json.dumps(last_analysis_result, indent=2), mimetype='application/json')
+    response.headers['Content-Disposition'] = 'attachment; filename=analysis_report.json'
+    return response
+
+@app.route('/logs', methods=['GET'])
+def download_logs():
+    """
+    Download the current log file.
+    """
+    log_path = logging.getLogger().handlers[0].baseFilename if logging.getLogger().handlers else 'app.log'
+    if not os.path.exists(log_path):
+        return jsonify({'error': 'Log file not found.'}), 404
+    return send_from_directory(os.path.dirname(log_path), os.path.basename(log_path), as_attachment=True)
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5002, debug=True)
