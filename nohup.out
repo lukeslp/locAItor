@@ -1,0 +1,502 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+[2025-04-24 23:19:03,898] INFO in _internal: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5002
+[2025-04-24 23:19:03,898] INFO in _internal: [33mPress CTRL+C to quit[0m
+[2025-04-24 23:19:03,899] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:19:04,155] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:19:04,159] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:19:11,804] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:19:11] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:19:11,874] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:19:11] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:19:15,784] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:19:15,785] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:19:15,785] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:19:15,785] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:19:16,272] INFO in app: EXIF extracted: []
+[2025-04-24 23:19:16,273] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:19:16,273] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:19:16,453] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:19:16,456] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:19:16] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:19:16,614] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:19:16,615] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:19:16,616] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:19:16,616] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:19:16,986] INFO in app: EXIF extracted: []
+[2025-04-24 23:19:16,986] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:19:16,987] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:19:17,470] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:19:28,857] INFO in app: xAI API response received.
+[2025-04-24 23:19:28,868] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:19:28] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:20:03,413] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:20:03,812] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:20:04,976] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:20:04,990] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:21:11,272] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:11] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:11,452] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:11] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:21:12,989] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:12] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:13,051] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:13] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:21:14,772] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:14] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:14,833] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:14] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:21:15,703] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:15] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:15,761] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:15] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:21:20,967] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:21:20,969] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:21:20,970] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:21:20,970] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:21:21,631] INFO in app: EXIF extracted: []
+[2025-04-24 23:21:21,633] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:21:21,634] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:21:21,923] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:21:21,925] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:21] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:21:22,105] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:21:22,110] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:21:22,112] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:21:22,112] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:21:23,292] INFO in app: EXIF extracted: []
+[2025-04-24 23:21:23,294] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:21:23,295] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:21:23,522] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:21:33,783] INFO in app: xAI API response received.
+[2025-04-24 23:21:33,856] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:33] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:21:43,611] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:43] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:43,680] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:43] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:21:44,061] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:44] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:21:44,117] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:44] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:21:51,002] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:21:51,009] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:21:51,010] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:21:51,010] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:21:52,602] INFO in app: EXIF extracted: []
+[2025-04-24 23:21:52,603] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:21:52,606] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:21:52,828] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:21:52,830] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:21:52] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:21:53,121] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:21:53,123] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:21:53,123] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:21:53,123] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:21:54,206] INFO in app: EXIF extracted: []
+[2025-04-24 23:21:54,207] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:21:54,210] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:21:54,381] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:22:08,152] INFO in app: xAI API response received.
+[2025-04-24 23:22:08,177] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:22:08] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:22:56,170] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:22:56] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:22:56,233] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:22:56] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:23:04,859] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:04] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:23:04,918] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:04] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:23:05,473] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:05] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:23:05,530] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:05] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:23:10,906] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:23:10,908] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:23:10,908] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:23:10,908] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:23:11,454] INFO in app: EXIF extracted: []
+[2025-04-24 23:23:11,455] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:23:11,455] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:23:11,635] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:23:11,639] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:11] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:23:11,812] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:23:11,813] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:23:11,813] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:23:11,813] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:23:12,268] INFO in app: EXIF extracted: []
+[2025-04-24 23:23:12,269] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:23:12,269] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:23:12,669] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:23:13,632] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:13] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:23:13,679] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:13] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:23:20,486] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:23:21,022] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:23:21,636] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:23:21,638] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:23:21,920] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:23:21,921] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:23:22,778] INFO in app: EXIF extracted: []
+[2025-04-24 23:23:22,779] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:23:22,780] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:23:22,780] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:23:22,780] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:23:23,087] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:23:23,091] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:23] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:23:23,264] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:23:23,358] INFO in app: xAI API response received.
+[2025-04-24 23:23:23,383] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:23] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:23:23,684] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:23:24,192] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:23:24,193] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:23:24,435] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:23:24,435] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:23:25,173] INFO in app: EXIF extracted: []
+[2025-04-24 23:23:25,173] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:23:25,173] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:23:25,174] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:23:25,174] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:23:25,363] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:23:34,272] INFO in app: xAI API response received.
+[2025-04-24 23:23:34,284] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:23:34] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:26:08,934] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:26:09,287] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:26:10,635] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:26:10,653] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:26:20,954] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:26:20] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:26:21,073] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:26:21] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:26:23,308] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:26:23] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:26:23,379] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:26:23] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:27:16,902] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:27:16] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:27:16,991] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:27:16] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:27:24,978] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:27:25,556] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:27:26,244] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:27:26,245] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:27:26,782] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:27:26,782] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:27:27,965] INFO in app: EXIF extracted: []
+[2025-04-24 23:27:27,965] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:27:27,972] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:27:27,973] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:27:27,973] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:27:28,249] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:27:28,253] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:27:28] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:27:29,197] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:27:29,804] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:27:30,526] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:27:30,526] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:27:31,035] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:27:31,037] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:27:32,305] INFO in app: EXIF extracted: []
+[2025-04-24 23:27:32,306] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:27:32,308] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:27:32,308] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:27:32,308] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:27:32,519] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:27:40,807] INFO in app: xAI API response received.
+[2025-04-24 23:27:40,855] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:27:40] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:27:59,135] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:27:59,546] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:28:01,181] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:28:01,205] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:28:35,800] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:28:35] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:28:35,892] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:28:35] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:28:37,020] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:28:37] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:28:37,080] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:28:37] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:29:08,371] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:08] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:08,547] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:08] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:09,570] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:09] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:09,619] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:09] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:35,256] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:35] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:35,318] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:35] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:36,017] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:36] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:36,066] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:36] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:36,828] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:36] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:36,883] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:36] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:55,671] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:55] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:29:55,768] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:29:55] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:29:56,487] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:29:57,189] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:29:58,012] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:29:58,013] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:29:58,678] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:29:58,679] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:30:00,040] INFO in app: EXIF extracted: []
+[2025-04-24 23:30:00,040] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:30:00,049] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:30:00,051] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:30:00,051] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:30:00,311] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:30:00,317] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:30:00] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:30:00,419] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:30:00,420] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:30:00,421] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:30:00,421] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:30:00,811] INFO in app: EXIF extracted: []
+[2025-04-24 23:30:00,812] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:30:00,812] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:30:01,256] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-24 23:30:01,344] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:30:01,361] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:30:01] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:30:01,554] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:30:01,567] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:30:01,574] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:30:01,575] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:30:02,363] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:30:03,394] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-24 23:30:03,396] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-24 23:30:03,518] INFO in app: EXIF extracted: []
+[2025-04-24 23:30:03,519] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:30:03,520] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:30:03,722] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:30:03,751] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-24 23:30:03,751] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:30:04,650] INFO in app: EXIF extracted: []
+[2025-04-24 23:30:04,651] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:30:04,652] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:30:04,652] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-24 23:30:04,652] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-24 23:30:04,837] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-24 23:30:12,019] INFO in app: xAI API response received.
+[2025-04-24 23:30:12,041] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:30:12] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:30:13,983] INFO in app: xAI API response received.
+[2025-04-24 23:30:13,986] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:30:13] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:30:23,304] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:30:23,772] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:30:25,393] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:30:25,417] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:31:16,009] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:31:16] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:31:16,077] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:31:16] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:31:23,036] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(2482, 4096)
+[2025-04-24 23:31:23,037] INFO in app: EXIF extracted: [296, 34665, 283, 305, 274, 306, 282, 315, 42032, 40961, 40962, 36867, 40963]
+[2025-04-24 23:31:23,037] INFO in app: Resizing image from (2482, 4096) to (1241, 2048)
+[2025-04-24 23:31:23,564] INFO in app: EXIF extracted: []
+[2025-04-24 23:31:23,566] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:31:23,566] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:31:23,571] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:31:23] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:31:24,014] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(2482, 4096)
+[2025-04-24 23:31:24,014] INFO in app: EXIF extracted: [296, 34665, 283, 305, 274, 306, 282, 315, 42032, 40961, 40962, 36867, 40963]
+[2025-04-24 23:31:24,014] INFO in app: Resizing image from (2482, 4096) to (1241, 2048)
+[2025-04-24 23:31:24,554] INFO in app: EXIF extracted: []
+[2025-04-24 23:31:24,554] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:31:24,555] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:31:34,538] INFO in app: xAI API response received.
+[2025-04-24 23:31:34,561] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:31:34] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:35:27,789] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:35:27] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:35:27,886] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:35:27] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:39:15,577] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:39:15] "[33mGET /locaitor/static/locaitor-preview.jpg HTTP/1.1[0m" 404 -
+[2025-04-24 23:39:16,534] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:39:16] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:39:44,813] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:39:44] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:39:44,883] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:39:44] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:40:05,592] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:05] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:40:05,652] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:05] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:40:05,674] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:05] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:40:05,742] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:05] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-24 23:40:13,365] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:40:13,367] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:40:13,367] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:40:13,368] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:40:13,785] INFO in app: EXIF extracted: []
+[2025-04-24 23:40:13,786] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:40:13,787] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:40:14,006] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:40:14,014] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:14] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:40:14,313] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:40:14,315] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:40:14,316] INFO in app: Extracted GPS from GPSInfo: 12390743/360000, -43079779/360000
+[2025-04-24 23:40:14,316] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:40:14,678] INFO in app: EXIF extracted: []
+[2025-04-24 23:40:14,679] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:40:14,679] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': -119.66605277777778} (source: parsed_gps)
+[2025-04-24 23:40:15,033] INFO in app: Reverse geocoded address: 331, Por la Mar Circle, El Escorial Villas, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:40:25,679] INFO in app: xAI API response received.
+[2025-04-24 23:40:25,693] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:25] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:40:32,187] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(3024, 4032)
+[2025-04-24 23:40:32,189] INFO in app: EXIF extracted: [296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 41985, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:40:32,189] INFO in app: Resizing image from (3024, 4032) to (1536, 2048)
+[2025-04-24 23:40:32,510] INFO in app: EXIF extracted: []
+[2025-04-24 23:40:32,511] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:40:32,511] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:40:32,513] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:32] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:40:33,851] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(3024, 4032)
+[2025-04-24 23:40:33,852] INFO in app: EXIF extracted: [296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 41985, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:40:33,852] INFO in app: Resizing image from (3024, 4032) to (1536, 2048)
+[2025-04-24 23:40:34,323] INFO in app: EXIF extracted: []
+[2025-04-24 23:40:34,324] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:40:34,325] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:40:46,593] INFO in app: xAI API response received.
+[2025-04-24 23:40:46,600] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:46] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:40:56,836] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:56] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:40:56,891] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:40:56] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:41:02,809] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:41:02,810] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:41:02,812] INFO in app: Extracted GPS from GPSInfo: 4129981/120000, -14360669/120000
+[2025-04-24 23:41:02,812] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:41:03,587] INFO in app: EXIF extracted: []
+[2025-04-24 23:41:03,589] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:41:03,590] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41650833333333, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-24 23:41:03,801] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:41:03,801] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:41:03] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:41:04,264] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:41:04,265] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:41:04,266] INFO in app: Extracted GPS from GPSInfo: 4129981/120000, -14360669/120000
+[2025-04-24 23:41:04,267] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:41:05,004] INFO in app: EXIF extracted: []
+[2025-04-24 23:41:05,005] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:41:05,006] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41650833333333, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-24 23:41:05,211] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:41:13,903] INFO in app: xAI API response received.
+[2025-04-24 23:41:13,910] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:41:13] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:42:06,123] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:42:06,206] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:42:06,579] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:42:06,591] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:42:07,601] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:42:07,662] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:42:07,929] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:42:07,931] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:42:30,006] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-24 23:42:30,052] INFO in _internal:  * Restarting with stat
+[2025-04-24 23:42:30,306] WARNING in _internal:  * Debugger is active!
+[2025-04-24 23:42:30,309] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-24 23:42:50,525] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:42:50] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:42:50,592] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:42:50] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:43:02,216] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:43:02,218] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:43:02,218] INFO in app: Extracted GPS from GPSInfo: 12389939/360000, -14360669/120000
+[2025-04-24 23:43:02,219] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:43:02,587] INFO in app: EXIF extracted: []
+[2025-04-24 23:43:02,588] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:43:02,588] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41649722222222, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-24 23:43:02,758] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:43:02,760] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:43:02] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:43:03,026] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:43:03,027] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41988, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-24 23:43:03,027] INFO in app: Extracted GPS from GPSInfo: 12389939/360000, -14360669/120000
+[2025-04-24 23:43:03,028] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:43:03,392] INFO in app: EXIF extracted: []
+[2025-04-24 23:43:03,393] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:43:03,393] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41649722222222, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-24 23:43:03,763] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-24 23:43:15,472] INFO in app: xAI API response received.
+[2025-04-24 23:43:15,484] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:43:15] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-24 23:44:37,727] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:44:37] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-24 23:44:37,814] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:44:37] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-24 23:44:59,649] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:44:59,650] INFO in app: EXIF extracted: [296, 34665, 274, 531, 282, 283, 36864, 37121, 40960, 40961, 40962, 40963, 41990]
+[2025-04-24 23:44:59,650] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:45:00,041] INFO in app: EXIF extracted: []
+[2025-04-24 23:45:00,041] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:45:00,041] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:45:00,046] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:45:00] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-24 23:45:02,161] INFO in app: Image opened: format=JPEG, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-24 23:45:02,161] INFO in app: EXIF extracted: [296, 34665, 274, 531, 282, 283, 36864, 37121, 40960, 40961, 40962, 40963, 41990]
+[2025-04-24 23:45:02,161] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-24 23:45:02,553] INFO in app: EXIF extracted: []
+[2025-04-24 23:45:02,554] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-24 23:45:02,554] INFO in app: Final GPS coordinates sent to frontend: None (source: None)
+[2025-04-24 23:45:11,950] INFO in app: xAI API response received.
+[2025-04-24 23:45:11,957] INFO in _internal: 127.0.0.1 - - [24/Apr/2025 23:45:11] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-25 00:09:10,298] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-25 00:09:10,429] INFO in _internal:  * Restarting with stat
+[2025-04-25 00:09:11,099] WARNING in _internal:  * Debugger is active!
+[2025-04-25 00:09:11,117] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-25 00:11:39,175] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:11:39] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:11:39,231] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:11:39] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-25 00:11:46,150] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:11:46,643] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:11:47,285] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:11:47,287] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:11:47,581] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:11:47,581] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:11:48,374] INFO in app: EXIF extracted: []
+[2025-04-25 00:11:48,375] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:11:48,380] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:11:48,380] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:11:48,381] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:11:48,597] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:11:48,599] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:11:48] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-25 00:11:48,799] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:11:49,224] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:11:49,749] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:11:49,750] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:11:49,972] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:11:49,972] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:11:50,766] INFO in app: EXIF extracted: []
+[2025-04-25 00:11:50,767] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:11:50,768] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:11:50,768] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:11:50,769] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:11:51,290] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:12:00,530] INFO in app: xAI API response received.
+[2025-04-25 00:12:00,536] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:12:00] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-25 00:17:07,587] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:17:07] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:17:07,647] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:17:07] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-25 00:17:12,845] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:17:13,781] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:17:14,942] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:17:14,942] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:17:15,467] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:17:15,468] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:17:17,005] INFO in app: EXIF extracted: []
+[2025-04-25 00:17:17,008] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:17:17,008] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:17:17,008] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:17:17,008] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:17:17,226] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:17:17,234] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:17:17] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-25 00:17:17,451] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:17:18,326] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:17:19,604] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:17:19,604] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:17:20,102] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:17:20,103] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:17:21,537] INFO in app: EXIF extracted: []
+[2025-04-25 00:17:21,539] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:17:21,539] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:17:21,539] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:17:21,540] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:17:21,757] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:17:30,943] INFO in app: xAI API response received.
+[2025-04-25 00:17:30,964] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:17:30] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-25 00:19:32,600] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:32] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:19:32,760] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:32] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-25 00:19:34,823] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:34] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:19:34,868] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:34] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-25 00:19:36,908] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:36] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:19:36,950] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:36] "[36mGET /locaitor/static/styles.css HTTP/1.1[0m" 304 -
+[2025-04-25 00:19:44,290] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-25 00:19:44,292] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-25 00:19:44,292] INFO in app: Extracted GPS from GPSInfo: 4129981/120000, -14360669/120000
+[2025-04-25 00:19:44,292] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:19:44,822] INFO in app: EXIF extracted: []
+[2025-04-25 00:19:44,823] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:19:44,823] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41650833333333, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-25 00:19:45,161] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-25 00:19:45,162] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:45] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-25 00:19:45,626] INFO in app: Image opened: format=MPO, mimetype=image/jpeg, size=(4032, 3024)
+[2025-04-25 00:19:45,627] INFO in app: EXIF extracted: [34853, 296, 34665, 271, 272, 305, 274, 306, 531, 282, 283, 316, 36864, 37121, 37377, 36867, 36868, 37378, 37379, 37380, 37383, 37385, 37386, 40961, 40962, 41989, 41990, 36880, 36881, 36882, 37521, 37396, 37522, 40963, 41495, 33434, 33437, 41729, 34850, 34855, 41986, 40960, 41987, 42034, 42035, 42036, 42080, 37500]
+[2025-04-25 00:19:45,627] INFO in app: Extracted GPS from GPSInfo: 4129981/120000, -14360669/120000
+[2025-04-25 00:19:45,627] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:19:46,119] INFO in app: EXIF extracted: []
+[2025-04-25 00:19:46,120] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:19:46,120] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.41650833333333, 'lon': -119.67224166666666} (source: parsed_gps)
+[2025-04-25 00:19:46,300] INFO in app: Reverse geocoded address: East Cabrillo Boulevard, Santa Barbara, Santa Barbara County, California, 93103, United States
+[2025-04-25 00:19:58,387] INFO in app: xAI API response received.
+[2025-04-25 00:19:58,400] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:19:58] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-25 00:24:33,549] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-25 00:24:33,746] INFO in _internal:  * Restarting with stat
+[2025-04-25 00:24:34,453] WARNING in _internal:  * Debugger is active!
+[2025-04-25 00:24:34,470] INFO in _internal:  * Debugger PIN: 102-860-467
+[2025-04-25 00:26:05,059] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:26:05] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:26:05,295] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:26:05] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-25 00:26:11,335] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:26:12,258] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:26:13,365] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:26:13,366] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:26:13,848] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:26:13,850] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:26:15,365] INFO in app: EXIF extracted: []
+[2025-04-25 00:26:15,366] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:26:15,375] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:26:15,376] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:26:15,376] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:26:15,597] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:26:15,603] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:26:15] "POST /locaitor/analyze?stream=1 HTTP/1.1" 200 -
+[2025-04-25 00:26:15,853] INFO in app: Image opened: format=HEIF, mimetype=image/heic, size=(4032, 3024)
+[2025-04-25 00:26:16,608] WARNING in app: pillow-heif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:26:17,758] ERROR in app: pyheif HEIC EXIF extraction failed: 'NoneType' object has no attribute 'items'
+[2025-04-25 00:26:17,758] INFO in app: Trying exiftool fallback for HEIC EXIF extraction.
+[2025-04-25 00:26:18,207] ERROR in app: EXIF extraction failed: 'HeifImageFile' object has no attribute '_getexif'
+[2025-04-25 00:26:18,208] INFO in app: Resizing image from (4032, 3024) to (2048, 1536)
+[2025-04-25 00:26:19,718] INFO in app: EXIF extracted: []
+[2025-04-25 00:26:19,719] INFO in app: AI detection: None, Reason: No metadata found; cannot determine if AI-generated.
+[2025-04-25 00:26:19,720] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:26:19,720] WARNING in app: Failed to parse GPS from direct fields: could not convert string to float: '34 deg 25\' 7.43" N'
+[2025-04-25 00:26:19,720] INFO in app: Final GPS coordinates sent to frontend: {'lat': 34.418730555555555, 'lon': 119.66605277777778} (source: heic_exif)
+[2025-04-25 00:26:19,907] INFO in app: Reverse geocoded address: 五图河农场, Lianyungang, Jiangsu, China
+[2025-04-25 00:26:31,047] INFO in app: xAI API response received.
+[2025-04-25 00:26:31,059] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:26:31] "POST /locaitor/analyze HTTP/1.1" 200 -
+[2025-04-25 00:31:15,804] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:31:15] "GET /locaitor/ HTTP/1.1" 200 -
+[2025-04-25 00:31:15,858] INFO in _internal: 127.0.0.1 - - [25/Apr/2025 00:31:15] "GET /locaitor/static/styles.css HTTP/1.1" 200 -
+[2025-04-25 00:32:51,727] INFO in _internal:  * Detected change in '/home/html/locaitor/app.py', reloading
+[2025-04-25 00:32:51,904] INFO in _internal:  * Restarting with stat
+[2025-04-25 00:32:52,603] WARNING in _internal:  * Debugger is active!
+[2025-04-25 00:32:52,615] INFO in _internal:  * Debugger PIN: 102-860-467

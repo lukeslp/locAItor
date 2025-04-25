@@ -2,7 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>locAItor</title>
+  <meta name="description" content="Image analysis and metadata extraction">
+  <meta property="og:title" content="locAItor">
+  <meta property="og:description" content="Image analysis and metadata extraction">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="{{ url_for('main.static', filename='locaitor-preview.jpg', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="locAItor">
+  <meta name="twitter:description" content="Image analysis and metadata extraction">
+  <meta name="twitter:image" content="{{ url_for('main.static', filename='locaitor-preview.jpg', _external=True) }}">
   <link rel="icon" href="data:,">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- Use Flask's url_for for static asset handling -->
@@ -11,29 +21,51 @@
   <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <!-- Leaflet for maps -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 </head>
 <body>
   <div class="main-container">
     <h1 class="page-title">locAItor</h1>
     <div class="upload-section">
-      <div id="dropZone" class="upload-dropzone">Drag &amp; drop an image here<br>or click to choose one</div>
+      <div id="dropZone" class="upload-dropzone" tabindex="0" aria-label="Image upload area">
+        <span class="dropzone-icon" aria-hidden="true">
+          <!-- SVG icon for upload (decorative) -->
+          <svg width="48" height="48" fill="none" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <path d="M24 34V14M24 14l-8 8m8-8l8 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="8" y="34" width="32" height="6" rx="3" fill="currentColor" opacity="0.15"/>
+          </svg>
+        </span>
+        <span class="dropzone-main-text">Drag & drop an image here</span>
+        <span class="dropzone-sub-text">or click to choose one</span>
+      </div>
       <input type="file" id="fileInput" accept="image/*"/>
-      <div id="progressIndicator" class="progress-indicator" style="display:none;">Ready</div>
+      <div id="progressIndicator" class="progress-indicator" style="display:none;" aria-busy="false">
+        <div class="progress-bar" style="width:0%"></div>
+        <span class="progress-label">Ready</span>
+      </div>
       <div class="profile-image-wrapper" id="profileImageWrapper" style="display:none;">
         <img id="preview" class="profile-image" tabindex="0" alt="Image preview"/>
       </div>
     </div>
     <div class="results-section">
-      <!-- Hide LLM output area by default -->
+      <!-- Map section moved to top -->
+      <div id="mapSection" style="display:none; margin-bottom:1.5rem;"></div>
+      
+      <!-- GPS info section -->
+      <div id="gpsSection" style="display:none; margin-bottom:1rem;"></div>
+      
+      <!-- LLM output area -->
       <div id="llm-output" aria-live="polite" class="llm-streaming-response" style="display:none;"></div>
+      
+      <!-- Metadata section -->
       <section id="metaSection" style="display:none; text-align:left; margin-top:1.5rem;" aria-labelledby="metaHeading">
         <h2 id="metaHeading" class="meta-heading">Image Metadata & AI Detection</h2>
         <div id="metaContent"></div>
         <div id="provenanceSection"></div>
-        <div id="gpsSection" style="margin-top:1em;"></div>
-        <div id="mapSection" style="margin-top:1em;"></div>
-        <details style="margin-top:1em;"><summary><strong>Raw Metadata (JSON)</strong></summary><pre id="rawMeta" style="font-size:0.95em; background:#f8f8f8; border-radius:4px; padding:0.5em;"></pre></details>
-        <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
+        <details style="margin-top:1em;"><summary><strong>Raw Metadata (JSON)</strong></summary><pre id="rawMeta" style="font-size:0.95em; background:#2a2a2a; border-radius:4px; padding:0.5em;"></pre></details>
+        <div class="button-row">
           <button id="downloadReport" class="brand-btn" aria-label="Download analysis report as JSON">Download Report</button>
           <button id="downloadLogs" class="brand-btn" aria-label="Download server logs">Download Logs</button>
         </div>
@@ -49,9 +81,6 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
   <script>
     const DZ = document.getElementById('dropZone'),
           FI = document.getElementById('fileInput'),
@@ -59,7 +88,12 @@
           PI = document.getElementById('progressIndicator'),
           PIW = document.getElementById('profileImageWrapper'),
           RS = document.getElementById('llm-output'),
-          md = window.markdownit(),
+          md = window.markdownit({
+            html: false,
+            breaks: true,
+            linkify: true,
+            typographer: true
+          }),
           MS = document.getElementById('metaSection'),
           MC = document.getElementById('metaContent'),
           PROV = document.getElementById('provenanceSection'),
@@ -98,12 +132,23 @@
     CLOSE_MODAL.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') MODAL.style.display = 'none'; };
     MODAL.onclick = (e) => { if (e.target === MODAL) MODAL.style.display = 'none'; };
 
+    // Progress bar helper
+    function setProgress(percent, label, busy = true) {
+      if (!PI) return;
+      const bar = PI.querySelector('.progress-bar');
+      const lbl = PI.querySelector('.progress-label');
+      if (bar) bar.style.width = (percent || 0) + '%';
+      if (lbl && label) lbl.textContent = label;
+      PI.setAttribute('aria-busy', !!busy);
+      PI.style.display = 'block';
+    }
+
     async function handleImage(file) {
       DZ.style.display = 'none';
       PIW.style.display = 'none'; // Hide image preview area
       PV.style.display = 'none';
       PV.src = '';
-      if (PI) { PI.style.display = 'block'; PI.textContent = 'Uploading image...'; }
+      setProgress(10, 'Uploading image...', true);
       if (RS) {
         RS.style.display = 'none';
         RS.textContent   = '';
@@ -111,7 +156,9 @@
       MS.style.display = 'none';
       MC.innerHTML     = '';
       PROV.innerHTML   = '';
+      GPS.style.display = 'none';
       GPS.innerHTML    = '';
+      MAP.style.display = 'none';
       MAP.innerHTML    = '';
       RAW.textContent  = '';
 
@@ -119,7 +166,7 @@
       const isHeic = file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic');
       if (isHeic && window.heic2any) {
         try {
-          if (PI) PI.textContent = 'Converting HEIC image...';
+          setProgress(20, 'Converting HEIC image...', true);
           const blob = await heic2any({ blob: file, toType: 'image/jpeg' });
           PV.src = URL.createObjectURL(blob);
           PV.style.display = 'block';
@@ -128,13 +175,14 @@
           PV.style.display = 'none';
           PIW.style.display = 'none';
           PV.alt = 'Preview not available (HEIC conversion failed)';
+          setProgress(100, 'HEIC conversion failed', false);
         }
       } else {
         PV.src = URL.createObjectURL(file);
         PV.style.display = 'block';
         PIW.style.display = 'block';
       }
-      if (PI) PI.textContent = 'Analyzing image metadata...';
+      setProgress(30, 'Analyzing image metadata...', true);
 
       const form = new FormData();
       form.append('image', file);
@@ -146,7 +194,7 @@
           const resp = await fetch('/locaitor/analyze?stream=1', { method:'POST', body: form });
           if (resp.ok && resp.body && resp.headers.get('content-type') === 'text/plain') {
             streamed = true;
-            let progressState = 0;
+            let progressState = 40;
             const reader = resp.body.getReader();
             let decoder = new TextDecoder();
             let text = '';
@@ -157,7 +205,7 @@
               if (done) break;
               const chunk = decoder.decode(value, {stream:true});
               if (firstChunk) {
-                if (PI) PI.textContent = 'Processing with AI...';
+                setProgress(60, 'Processing with AI...', true);
                 const nlIdx = chunk.indexOf('\n');
                 let metaLine = chunk, rest = '';
                 if (nlIdx !== -1) {
@@ -167,58 +215,65 @@
                 try {
                   metaObj = JSON.parse(metaLine);
                   renderMetadata(metaObj); // Show metadata/map immediately
-                  if (PI) PI.textContent = 'Waiting for AI response...';
+                  setProgress(80, 'Waiting for AI response...', true);
                 } catch (e) {
-                  MC.innerHTML = '<div style="color:#b00;">Failed to parse metadata from server.</div>';
-                  if (PI) PI.textContent = 'Error parsing metadata.';
+                  MC.innerHTML = '<div style="color:var(--error-color);">Failed to parse metadata from server.</div>';
+                  setProgress(100, 'Error parsing metadata.', false);
                 }
                 if (rest) {
                   text += rest;
                   RS.innerHTML = md.render(text);
                   RS.style.display = text.trim() ? 'block' : 'none';
-                  if (PI) PI.style.display = 'none';
+                  setProgress(100, 'Done', false);
+                  PI.style.display = 'none';
                 }
                 firstChunk = false;
               } else {
                 text += chunk;
                 RS.innerHTML = md.render(text);
                 RS.style.display = text.trim() ? 'block' : 'none';
-                if (PI) PI.style.display = 'none';
+                setProgress(100, 'Done', false);
+                PI.style.display = 'none';
               }
             }
-            if (PI) PI.style.display = 'none';
+            setProgress(100, 'Done', false);
+            PI.style.display = 'none';
             return;
           }
         }
         if (!streamed) {
-          if (PI) PI.textContent = 'Processing with AI...';
+          setProgress(60, 'Processing with AI...', true);
           const resp = await fetch('/locaitor/analyze', { method:'POST', body: form });
           const j    = await resp.json();
           if (j.error) {
-            RS.innerHTML = `<div style='color:#b00;'>${j.error}</div>`;
+            RS.innerHTML = `<div style='color:var(--error-color);'>${j.error}</div>`;
             RS.style.display = 'block';
             MS.style.display = 'none';
-            if (PI) PI.style.display = 'none';
+            setProgress(100, 'Error', false);
+            PI.style.display = 'none';
             return;
           }
           if (!j.metadata) {
-            RS.innerHTML = `<div style='color:#b00;'>No metadata returned from server.</div>`;
+            RS.innerHTML = `<div style='color:var(--error-color);'>No metadata returned from server.</div>`;
             RS.style.display = 'block';
             MS.style.display = 'none';
-            if (PI) PI.style.display = 'none';
+            setProgress(100, 'Error', false);
+            PI.style.display = 'none';
             return;
           }
           renderMetadata(j); // Show metadata/map first
           const text = j.content || j.error;
           RS.innerHTML = md.render(text);
           RS.style.display = text && text.trim() ? 'block' : 'none';
-          if (PI) PI.style.display = 'none';
+          setProgress(100, 'Done', false);
+          PI.style.display = 'none';
         }
       } catch (err) {
         RS.textContent = 'Error: ' + err.message;
         RS.style.display = 'block';
         MS.style.display = 'none';
-        if (PI) PI.style.display = 'none';
+        setProgress(100, 'Error', false);
+        PI.style.display = 'none';
       }
     }
 
@@ -279,15 +334,14 @@
           var expanded = this.getAttribute('aria-expanded') === 'true';
           this.setAttribute('aria-expanded', !expanded);
           content.setAttribute('aria-hidden', expanded);
-          if (content.style.display === "block") {
-            content.style.display = "none";
+          if (content.style.maxHeight) {
+            content.style.maxHeight = null;
           } else {
-            content.style.display = "block";
+            content.style.maxHeight = content.scrollHeight + "px";
           }
         };
         coll[i].setAttribute('aria-expanded', 'false');
         if (coll[i].nextElementSibling) {
-          coll[i].nextElementSibling.style.display = 'none';
           coll[i].nextElementSibling.setAttribute('aria-hidden', 'true');
         }
       }
@@ -297,21 +351,209 @@
     function renderMetadata(j) {
       if (!j || !j.metadata) return;
       MS.style.display = 'block'; // Show metadata/map area immediately
-      // j: { metadata, gps, address }
-      const hasGps = j.gps && typeof j.gps.lat === 'number' && typeof j.gps.lon === 'number';
-      const gpsDisplay = hasGps ? `${j.gps.lat.toFixed(6)}, ${j.gps.lon.toFixed(6)}` : (() => {
-        let lat = j.metadata?.exif?.GPSLatitude || j.metadata?.heic_exif?.GPSLatitude;
-        let lon = j.metadata?.exif?.GPSLongitude || j.metadata?.heic_exif?.GPSLongitude;
-        if (lat && lon) return `${lat}, ${lon}`;
-        return '—';
-      })();
-      // ---
+      
+      // Debug log to console - all possible GPS sources
+      console.log("GPS from backend:", j.gps);
+      console.log("EXIF metadata:", j.metadata.exif);
+      console.log("HEIC EXIF metadata:", j.metadata.heic_exif);
+      console.log("Original EXIF metadata:", j.metadata.exif_orig);
+      
+      // --- Robust GPS extraction for map ---
+      // Helper: Convert DMS (array or string) to decimal
+      function dmsToDecimal(dms, ref) {
+        if (!dms) return null;
+        
+        // If already a number, return it
+        if (typeof dms === 'number') return dms;
+        
+        // Handle array of [deg, min, sec] format or nested array [[deg,1], [min,1], [sec,1]]
+        if (Array.isArray(dms)) {
+          try {
+            if (dms.length === 3) {
+              // Standard [deg, min, sec] format
+              let [deg, min, sec] = dms.map(val => {
+                // Handle both simple numbers and ratio arrays [num, denom]
+                return Array.isArray(val) ? (val[0] / val[1]) : Number(val);
+              });
+              let dec = deg + min/60 + sec/3600;
+              if (ref === 'S' || ref === 'W') dec = -dec;
+              console.log(`Converted array DMS ${dms} with ref ${ref} to ${dec}`);
+              return dec;
+            }
+          } catch (e) {
+            console.error("Error converting DMS array:", e);
+          }
+        }
+        
+        // Handle string format like "34 deg 25' 7.43\" N"
+        if (typeof dms === 'string') {
+          try {
+            let m = dms.match(/(\d+)[^\d]+(\d+)[^\d]+([\d.]+)[^\d]*([NSEW])?/);
+            if (m) {
+              let [, deg, min, sec, direction] = m;
+              let dec = parseFloat(deg) + parseFloat(min)/60 + parseFloat(sec)/3600;
+              if (direction === 'S' || direction === 'W' || ref === 'S' || ref === 'W') dec = -dec;
+              console.log(`Converted string DMS ${dms} with ref ${ref} to ${dec}`);
+              return dec;
+            }
+          } catch (e) {
+            console.error("Error converting DMS string:", e);
+          }
+        }
+        
+        // Handle object with 'degrees', 'minutes', 'seconds' properties
+        if (typeof dms === 'object' && dms !== null && !Array.isArray(dms)) {
+          try {
+            if ('degrees' in dms && 'minutes' in dms && 'seconds' in dms) {
+              let dec = dms.degrees + dms.minutes/60 + dms.seconds/3600;
+              if (ref === 'S' || ref === 'W') dec = -dec;
+              console.log(`Converted object DMS ${JSON.stringify(dms)} with ref ${ref} to ${dec}`);
+              return dec;
+            }
+          } catch (e) {
+            console.error("Error converting DMS object:", e);
+          }
+        }
+        
+        console.warn("Unhandled DMS format:", dms);
+        return null;
+      }
+      
+      // Handle special format from ExifTool where it's already a string like "34.123456 N, 118.123456 W"
+      function parseGPSString(str) {
+        if (!str || typeof str !== 'string') return null;
+        try {
+          // Format: "34.123456 N, 118.123456 W" or "34.123456, -118.123456"
+          let coords = str.match(/([+-]?\d+\.\d+)\s*([NSEWnsew])?[,\s]+([+-]?\d+\.\d+)\s*([NSEWnsew])?/);
+          if (coords) {
+            let lat = parseFloat(coords[1]);
+            let lon = parseFloat(coords[3]);
+            if (coords[2] && coords[2].toUpperCase() === 'S') lat = -lat;
+            if (coords[4] && coords[4].toUpperCase() === 'W') lon = -lon;
+            console.log(`Parsed GPS string "${str}" to ${lat}, ${lon}`);
+            return { lat, lon };
+          }
+        } catch (e) {
+          console.error("Error parsing GPS string:", e);
+        }
+        return null;
+      }
+      
+      // Extract GPS from all possible sources in metadata
+      function extractGPSFromMetadata(metadata) {
+        if (!metadata) return null;
+        
+        // All possible EXIF sources
+        let sources = [
+          { name: 'exif', data: metadata.exif || {} },
+          { name: 'heic_exif', data: metadata.heic_exif || {} },
+          { name: 'exif_orig', data: metadata.exif_orig || {} }
+        ];
+        
+        // Try already decoded GPS fields from backend
+        if (metadata.gps && typeof metadata.gps.lat === 'number' && typeof metadata.gps.lon === 'number') {
+          console.log("Using pre-decoded GPS from metadata:", metadata.gps);
+          return metadata.gps;
+        }
+        
+        // Try GPSPosition string format (common in ExifTool output)
+        for (let source of sources) {
+          if (source.data.GPSPosition) {
+            const gps = parseGPSString(source.data.GPSPosition);
+            if (gps) {
+              console.log(`Extracted GPS from ${source.name}.GPSPosition:`, gps);
+              return gps;
+            }
+          }
+        }
+        
+        // Try standard lat/lon fields directly as numbers
+        for (let source of sources) {
+          if (typeof source.data.GPSLatitude === 'number' && 
+              typeof source.data.GPSLongitude === 'number') {
+            const gps = {
+              lat: source.data.GPSLatitude,
+              lon: source.data.GPSLongitude
+            };
+            console.log(`Using numeric GPS from ${source.name}:`, gps);
+            return gps;
+          }
+        }
+        
+        // Try standard DMS format with ref
+        for (let source of sources) {
+          if (source.data.GPSLatitude && source.data.GPSLongitude) {
+            const lat = dmsToDecimal(source.data.GPSLatitude, source.data.GPSLatitudeRef);
+            const lon = dmsToDecimal(source.data.GPSLongitude, source.data.GPSLongitudeRef);
+            if (lat !== null && lon !== null) {
+              console.log(`Converted DMS from ${source.name} to decimal:`, { lat, lon });
+              return { lat, lon };
+            }
+          }
+        }
+        
+        // Try iPhone GPS fields that may be differently named
+        const iPhoneGPSFields = [
+          { lat: 'Latitude', lon: 'Longitude' },
+          { lat: 'GPSLatitude', lon: 'GPSLongitude' },
+          { lat: 'latitude', lon: 'longitude' }
+        ];
+        
+        for (let source of sources) {
+          for (let fields of iPhoneGPSFields) {
+            if (typeof source.data[fields.lat] === 'number' && 
+                typeof source.data[fields.lon] === 'number') {
+              const gps = {
+                lat: source.data[fields.lat],
+                lon: source.data[fields.lon]
+              };
+              console.log(`Using iPhone GPS fields from ${source.name}:`, gps);
+              return gps;
+            }
+          }
+        }
+        
+        console.warn("No GPS data found in any metadata source");
+        return null;
+      }
+      
+      // Get GPS data from all available sources
+      let lat = null, lon = null, gpsSource = 'none';
+      
+      // 1. First check for GPS coordinates in the backend-provided j.gps object
+      if (j.gps && typeof j.gps.lat === 'number' && typeof j.gps.lon === 'number') {
+        lat = j.gps.lat;
+        lon = j.gps.lon;
+        gpsSource = 'backend';
+        console.log("Using backend-provided GPS coordinates:", lat, lon);
+      } 
+      // 2. Try to extract from metadata if backend GPS is missing
+      else {
+        const extractedGPS = extractGPSFromMetadata(j.metadata);
+        if (extractedGPS) {
+          lat = extractedGPS.lat;
+          lon = extractedGPS.lon;
+          gpsSource = 'frontend-extracted';
+          console.log("Using frontend-extracted GPS coordinates:", lat, lon);
+        }
+      }
+      
+      // Verify we have valid coordinates
+      const hasGps = lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon);
+      // Show both rounded and full-precision GPS for clarity
+      const gpsDisplay = hasGps
+        ? `${lat.toFixed(6)}, ${lon.toFixed(6)} <span class="gps-precision">(rounded)</span><br><span style="font-size:0.95em; color:var(--text-secondary);">Full: ${lat}, ${lon}</span>`
+        : '—';
+      
+      console.log("Final GPS status:", { hasGps, lat, lon, gpsSource });
+      
+      // Generate metadata HTML
       let html = '';
       html += `<div><strong>AI Generated:</strong> <span aria-live="polite">${j.metadata.ai_generated === null ? 'Unknown' : (j.metadata.ai_generated ? 'Yes' : 'No')}</span></div>`;
       html += `<div><strong>Reason:</strong> <span>${j.metadata.ai_reason || ''}</span></div>`;
       html += '<table class="meta-summary"><tr><td><strong>Camera Model</strong></td><td>' + (j.metadata.exif?.Model || j.metadata.heic_exif?.Model || '—') + '</td></tr>';
       html += '<tr><td><strong>Date Taken</strong></td><td>' + (j.metadata.exif?.DateTimeOriginal || j.metadata.heic_exif?.DateTimeOriginal || '—') + '</td></tr>';
-      html += '<tr><td><strong>GPS</strong></td><td>' + gpsDisplay + '</td></tr>';
+      html += '<tr><td><strong>GPS</strong></td><td>' + gpsDisplay + (hasGps ? ` <span class="gps-source">(${gpsSource})</span>` : '') + '</td></tr>';
       html += '<tr><td><strong>Software</strong></td><td>' + (j.metadata.provenance?.software || '—') + '</td></tr>';
       html += '<tr><td><strong>Creator Tool</strong></td><td>' + (j.metadata.provenance?.creator_tool || '—') + '</td></tr>';
       html += '</table>';
@@ -321,7 +563,7 @@
       html += '<div class="collapsible-content" aria-hidden="true">';
       if (j.metadata.heic_exif && Object.keys(j.metadata.heic_exif).length) {
         if (j.metadata.heic_exif.error) {
-          html += `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.5em; margin-bottom:0.5em;">⚠️ <strong>HEIC EXIF extraction failed:</strong> ${j.metadata.heic_exif.error} <br>This is a technical limitation, not a sign of AI generation.</div>`;
+          html += `<div style="color:var(--error-color); background:rgba(255,82,82,0.1); border-radius:6px; padding:0.5em; margin-bottom:0.5em;">⚠️ <strong>HEIC EXIF extraction failed:</strong> ${j.metadata.heic_exif.error} <br>This is a technical limitation, not a sign of AI generation.</div>`;
         } else {
           html += '<pre>' + JSON.stringify(j.metadata.heic_exif, null, 2) + '</pre>';
         }
@@ -331,9 +573,9 @@
       html += '</div>';
       html += '<button type="button" class="collapsible" aria-expanded="false">XMP/ICC Metadata</button>';
       html += '<div class="collapsible-content" aria-hidden="true"><pre>' + JSON.stringify(j.metadata.xmp_icc || {}, null, 2) + '</pre></div>';
-      html += '<div class="button-row"><button id="downloadReport" class="brand-btn" aria-label="Download analysis report as JSON">Download Report</button>';
-      html += '<button id="downloadLogs" class="brand-btn" aria-label="Download server logs">Download Logs</button></div>';
+      
       MC.innerHTML = html;
+      
       // Provenance
       if (j.metadata && j.metadata.provenance) {
         let prov = j.metadata.provenance;
@@ -344,45 +586,206 @@
         provHtml += '</ul>';
         PROV.innerHTML = provHtml;
       } else {
-        PROV.innerHTML = '<h3>Provenance</h3><div style="color:#888;">No provenance metadata found.</div>';
+        PROV.innerHTML = '<h3>Provenance</h3><div style="color:var(--text-secondary);">No provenance metadata found.</div>';
       }
-      // --- Map ---
-      MAP.innerHTML = '<div id="map" style="height:350px; border-radius:8px;"></div>';
+
+      // --- GPS Info & Map ---
+      // Show sections
+      MAP.style.display = hasGps ? 'block' : 'none'; 
+      GPS.style.display = 'block';
+      
+      // Display GPS section content
+      if (hasGps) {
+        GPS.innerHTML = `<div><strong>GPS Coordinates:</strong> ${lat.toFixed(8)}, ${lon.toFixed(8)} <span class="gps-precision">(rounded)</span><br><span style="font-size:0.95em; color:var(--text-secondary);">Full: ${lat}, ${lon}</span> <span class="gps-source">(Source: ${gpsSource})</span></div>`;
+      } else {
+        GPS.innerHTML = `<div><strong>GPS Coordinates:</strong> No GPS data found in image</div>`;
+      }
+      
+      // Generate map
+      MAP.innerHTML = '<div id="map" style="height:350px; border-radius:12px;"></div>';
       setTimeout(() => {
         if (window.L && document.getElementById('map')) {
           try {
             let map, marker;
-            if (j.gps && typeof j.gps.lat === 'number' && typeof j.gps.lon === 'number') {
-              const lat = j.gps.lat;
-              const lon = j.gps.lon;
-              map = L.map('map', {scrollWheelZoom: false, attributionControl: true}).setView([lat, lon], 13);
-              marker = L.marker([lat, lon], {keyboard: true, alt: 'Photo location marker'}).addTo(map)
-                .bindPopup(`<strong>Location:</strong><br>${lat.toFixed(6)}, ${lon.toFixed(6)}`).openPopup();
+            if (hasGps) {
+              // Create map with dark theme options
+              map = L.map('map', {
+                scrollWheelZoom: false, 
+                attributionControl: true,
+                zoomControl: true
+              }).setView([lat, lon], 13);
+              
+              // Add dark theme tile layer
+              L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEDQIHq4C7sgAAAABJRU5ErkJggg=='
+              }).addTo(map);
+              
+              // Add marker at GPS location (full precision)
+              marker = L.marker([lat, lon], {
+                keyboard: true, 
+                alt: 'Photo location marker'
+              }).addTo(map)
+                .bindPopup(`<strong>Location:</strong><br>Rounded: ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>Full: ${lat}, ${lon}`)
+                .openPopup();
             } else {
-              map = L.map('map', {scrollWheelZoom: false, attributionControl: true}).setView([0, 0], 2);
+              map = L.map('map', {
+                scrollWheelZoom: false, 
+                attributionControl: true
+              }).setView([0, 0], 2);
+              
+              // Add dark theme tile layer for world map
+              L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+              }).addTo(map);
             }
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '© OpenStreetMap contributors',
-              errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEDQIHq4C7sgAAAABJRU5ErkJggg=='
-            }).addTo(map);
+            
+            // Force map to refresh after initial load
             setTimeout(() => { map.invalidateSize(); }, 200);
           } catch (e) {
             console.error('Map rendering error:', e);
-            MAP.innerHTML = `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map could not be rendered:</strong> ${e.message}</div>`;
+            MAP.innerHTML = `<div style="color:var(--error-color); background:rgba(255,82,82,0.1); border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map could not be rendered:</strong> ${e.message}</div>`;
           }
         } else {
           console.error('Leaflet not loaded or map container not found');
-          MAP.innerHTML = `<div style="color:#b00; background:#2C2F33; border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map library not loaded.</strong></div>`;
+          MAP.innerHTML = `<div style="color:var(--error-color); background:rgba(255,82,82,0.1); border-radius:6px; padding:0.8em; line-height:1.4;">⚠️ <strong>Map library not loaded.</strong></div>`;
         }
       }, 300);
+      
+      // Display raw metadata
       RAW.textContent = JSON.stringify(j.metadata, null, 2);
+      
+      // Add original EXIF metadata if available
       if (j.metadata && j.metadata.exif_orig) {
         MC.innerHTML += '<button type="button" class="collapsible" aria-expanded="false">Original EXIF Metadata</button>';
         MC.innerHTML += '<div class="collapsible-content" aria-hidden="true"><pre>' + JSON.stringify(j.metadata.exif_orig || {}, null, 2) + '</pre></div>';
       }
-      // --- Re-initialize collapsibles after dynamic content injection ---
+      
+      // Initialize collapsibles after content is loaded
       initCollapsibles();
     }
   </script>
+
+  <style>
+    /* Add enhanced mobile styling */
+    @media (max-width: 767px) {
+      body {
+        font-size: 14px;
+      }
+      
+      .main-container {
+        padding: 10px;
+        max-width: 100%;
+      }
+      
+      .page-title {
+        font-size: 1.8rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      .upload-dropzone {
+        padding: 15px;
+        margin-bottom: 10px;
+      }
+      
+      .profile-image-wrapper {
+        max-height: 40vh;
+        margin: 10px 0;
+      }
+      
+      .profile-image {
+        max-height: 40vh;
+      }
+      
+      .llm-streaming-response {
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+      
+      /* Make metadata view more compact on mobile */
+      .meta-summary {
+        font-size: 0.9rem;
+      }
+      
+      .meta-summary td {
+        padding: 4px;
+      }
+      
+      /* Adjust collapsible sections */
+      button.collapsible {
+        padding: 8px;
+        font-size: 0.9rem;
+      }
+      
+      /* Make map smaller on mobile */
+      #map {
+        height: 250px !important;
+      }
+      
+      /* Make buttons more tappable */
+      .brand-btn {
+        padding: 10px 15px;
+        margin: 5px;
+        min-width: 120px;
+      }
+      
+      /* Adjust pre/code blocks for smaller screens */
+      pre {
+        padding: 8px;
+        font-size: 0.8rem;
+        overflow-x: auto;
+      }
+      
+      /* Better modal for mobile */
+      .gallery-modal-content {
+        width: 95%;
+        max-width: 95%;
+        height: auto;
+        max-height: 90vh;
+      }
+      
+      .gallery-modal-image {
+        max-height: 80vh;
+      }
+      
+      .gallery-modal-close {
+        font-size: 2rem;
+        padding: 0 10px;
+      }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 480px) {
+      body {
+        font-size: 13px;
+      }
+      
+      .page-title {
+        font-size: 1.5rem;
+      }
+      
+      /* Stack buttons on very small screens */
+      .button-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .brand-btn {
+        margin: 5px 0;
+        width: 100%;
+      }
+      
+      /* Even smaller map */
+      #map {
+        height: 200px !important;
+      }
+    }
+  </style>
 </body>
 </html>

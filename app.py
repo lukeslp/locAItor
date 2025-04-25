@@ -39,8 +39,15 @@ XAI_API_URL = "https://api.x.ai/v1/chat/completions"
 MODEL       = os.getenv('XAI_MODEL', 'grok-2-vision')
 
 SYSTEM_PROMPT = (
-    "You are an assistant that pinpoints exactly where a photo was taken. "
-    "Give the most specific location you can (landmarks, city, region)."
+    "You are an expert assistant in image forensics, geolocation, and socioeconomic inference. "
+    "Given the image and all available metadata (EXIF, HEIC EXIF, XMP, ICC, provenance, AI detection fields), provide a detailed, narrative description of everything you can infer about the photo, its context, and its origin. "
+    "Describe the scene, the likely location (landmarks, city, region, address if possible), and any clues about the environment. "
+    "If possible, make an educated guess about the direction the photographer was facing (e.g., north, south, toward a landmark, etc.), using shadows, sun position, or metadata. "
+    "Critically, analyze the socioeconomic status (SES) of the neighborhood or area where the photo was taken, using all available clues (address, visual cues, metadata, etc.). "
+    "If you have access to current web data or APIs, list likely nearby restaurants, amenities, schools, and typical jobs/industries in the area. "
+    "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, clearly state so and explain your reasoning. "
+    "Always use both visual cues and ALL available metadata. Summarize any provenance or software information you find. "
+    "Be as specific, thorough, and accessible as possible in your narrative."
 )
 
 def extract_exif(image_bytes):
@@ -54,20 +61,107 @@ def extract_exif(image_bytes):
         return {}
 
 def parse_gps(exif):
-    gps_info = exif.get("GPSInfo")
-    if not gps_info: return None
-    gps = { ExifTags.GPSTAGS.get(k, k): v for k, v in gps_info.items() }
-    def to_deg(vals):
-        d, m, s = vals
-        return d[0]/d[1] + m[0]/m[1]/60 + s[0]/s[1]/3600
-    try:
-        lat = to_deg(gps["GPSLatitude"])
-        if gps.get("GPSLatitudeRef") != "N": lat = -lat
-        lon = to_deg(gps["GPSLongitude"])
-        if gps.get("GPSLongitudeRef") != "E": lon = -lon
-        return lat, lon
-    except:
+    """
+    Improved GPS extraction from EXIF data to handle various GPS formats.
+    Returns (lat, lon) tuple if GPS data is found, otherwise None.
+    """
+    if not exif:
         return None
+        
+    # Handle GPSInfo dictionary format
+    gps_info = exif.get("GPSInfo")
+    if gps_info and isinstance(gps_info, dict):
+        gps = { ExifTags.GPSTAGS.get(k, k): v for k, v in gps_info.items() }
+        
+        try:
+            def to_deg(vals):
+                # Handle both simple values and rational values
+                if isinstance(vals, tuple) or isinstance(vals, list):
+                    d, m, s = vals
+                    # Handle rational values stored as (num, denom) tuples
+                    if isinstance(d, tuple) and len(d) == 2:
+                        d = d[0] / d[1]
+                    if isinstance(m, tuple) and len(m) == 2:
+                        m = m[0] / m[1]
+                    if isinstance(s, tuple) and len(s) == 2:
+                        s = s[0] / s[1]
+                    return d + m/60 + s/3600
+                # Already a decimal value
+                elif isinstance(vals, (int, float)):
+                    return float(vals)
+                return 0
+                
+            lat = to_deg(gps["GPSLatitude"])
+            if gps.get("GPSLatitudeRef", "N") != "N":
+                lat = -lat
+                
+            lon = to_deg(gps["GPSLongitude"])
+            if gps.get("GPSLongitudeRef", "E") != "E":
+                lon = -lon
+                
+            logger.info(f"Extracted GPS from GPSInfo: {lat}, {lon}")
+            return lat, lon
+        except (KeyError, ValueError, TypeError, ZeroDivisionError) as e:
+            logger.warning(f"Failed to parse GPS from GPSInfo: {e}")
+    
+    # Handle direct lat/lon fields
+    lat_field = None
+    lon_field = None
+    
+    # Try common GPS field names
+    gps_field_names = [
+        ('GPSLatitude', 'GPSLongitude'),
+        ('Latitude', 'Longitude'),
+        ('latitude', 'longitude')
+    ]
+    
+    for lat_name, lon_name in gps_field_names:
+        if lat_name in exif and lon_name in exif:
+            lat_field = lat_name
+            lon_field = lon_name
+            break
+    
+    if lat_field and lon_field:
+        try:
+            lat = float(exif[lat_field])
+            lon = float(exif[lon_field])
+            
+            # Check for reference fields
+            lat_ref = exif.get(f"{lat_field}Ref", exif.get("GPSLatitudeRef", "N"))
+            lon_ref = exif.get(f"{lon_field}Ref", exif.get("GPSLongitudeRef", "E"))
+            
+            if lat_ref == "S":
+                lat = -lat
+            if lon_ref == "W":
+                lon = -lon
+                
+            logger.info(f"Extracted GPS from direct fields: {lat}, {lon}")
+            return lat, lon
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to parse GPS from direct fields: {e}")
+    
+    # Handle GPSPosition string format
+    gps_position = exif.get('GPSPosition')
+    if gps_position and isinstance(gps_position, str):
+        try:
+            # Format: "34.123456 N, 118.123456 W" or "34.123456, -118.123456"
+            import re
+            coords = re.match(r"([+-]?\d+\.\d+)\s*([NSEWnsew])?[,\s]+([+-]?\d+\.\d+)\s*([NSEWnsew])?", gps_position)
+            if coords:
+                lat = float(coords.group(1))
+                lon = float(coords.group(3))
+                
+                if coords.group(2) and coords.group(2).upper() == "S":
+                    lat = -lat
+                if coords.group(4) and coords.group(4).upper() == "W":
+                    lon = -lon
+                    
+                logger.info(f"Extracted GPS from GPSPosition string: {lat}, {lon}")
+                return lat, lon
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.warning(f"Failed to parse GPS from GPSPosition: {e}")
+    
+    return None
 
 def extract_xmp_icc(image_bytes):
     """
@@ -276,9 +370,15 @@ last_analysis_result = None
 def dms_to_decimal(dms, ref=None):
     """
     Convert EXIF DMS (e.g., '34 deg 25\' 7.43" N') to decimal.
-    Accepts string, tuple/list, or float.
+    Accepts string, tuple/list, Fraction, or float.
     """
     import re
+    from fractions import Fraction
+    
+    # Handle Fraction objects
+    if isinstance(dms, Fraction):
+        return float(dms)
+        
     if isinstance(dms, (float, int)):
         return float(dms)
     if isinstance(dms, str):
@@ -291,6 +391,15 @@ def dms_to_decimal(dms, ref=None):
             return dec
     if isinstance(dms, (list, tuple)) and len(dms) == 3:
         deg, min, sec = dms
+        
+        # Handle Fraction objects in tuple elements
+        if isinstance(deg, Fraction):
+            deg = float(deg)
+        if isinstance(min, Fraction):
+            min = float(min)
+        if isinstance(sec, Fraction):
+            sec = float(sec)
+            
         dec = float(deg) + float(min)/60 + float(sec)/3600
         if ref in ['S', 'W']:
             dec = -dec
@@ -304,17 +413,51 @@ def extract_best_gps(exif_sources):
     Returns: (gps_coords: dict or None, source: str or None)
     Always returns decimal lat/lon if possible.
     """
+    # First try pre-parsed GPS coordinates
+    for source_name, exif in exif_sources:
+        if source_name == 'parsed_gps' and exif and 'lat' in exif and 'lon' in exif:
+            # Ensure coordinates are float values
+            return {
+                'lat': float(exif['lat']), 
+                'lon': float(exif['lon'])
+            }, source_name
+    
+    # Try direct GPS fields in all sources
     for source_name, exif in exif_sources:
         if not exif:
             continue
+            
+        # Process GPS using parse_gps function
+        gps_coords = parse_gps(exif)
+        if gps_coords and len(gps_coords) == 2:
+            lat, lon = gps_coords
+            if lat is not None and lon is not None:
+                # Ensure coordinates are float values
+                return {
+                    'lat': float(lat), 
+                    'lon': float(lon)
+                }, source_name
+    
+    # If none of the direct GPS extractions worked, try DMS conversion
+    for source_name, exif in exif_sources:
+        if not exif:
+            continue
+            
         lat = exif.get('GPSLatitude')
         lon = exif.get('GPSLongitude')
         lat_ref = exif.get('GPSLatitudeRef')
         lon_ref = exif.get('GPSLongitudeRef')
-        dec_lat = dms_to_decimal(lat, lat_ref)
-        dec_lon = dms_to_decimal(lon, lon_ref)
-        if dec_lat is not None and dec_lon is not None:
-            return {'lat': dec_lat, 'lon': dec_lon}, source_name
+        
+        if lat and lon:
+            dec_lat = dms_to_decimal(lat, lat_ref)
+            dec_lon = dms_to_decimal(lon, lon_ref)
+            if dec_lat is not None and dec_lon is not None:
+                # Ensure coordinates are float values
+                return {
+                    'lat': float(dec_lat), 
+                    'lon': float(dec_lon)
+                }, source_name
+    
     return None, None
 
 # --- Modular metadata packaging ---
@@ -342,12 +485,16 @@ def stream_metadata_and_llm(metadata, gps_coords, address, llm_stream):
 
 def make_json_serializable(obj):
     """
-    Recursively convert IFDRational, bytes, and other non-serializable types in EXIF dicts to float/int/str.
+    Recursively convert IFDRational, bytes, Fraction and other non-serializable types in EXIF dicts to float/int/str.
     """
     try:
         from PIL.TiffImagePlugin import IFDRational
     except ImportError:
         IFDRational = None
+    
+    # Import Fraction for handling fraction objects
+    from fractions import Fraction
+    
     if isinstance(obj, dict):
         return {k: make_json_serializable(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):
@@ -359,6 +506,8 @@ def make_json_serializable(obj):
             return float(obj)
         except Exception:
             return str(obj)
+    elif isinstance(obj, Fraction):
+        return float(obj)
     elif isinstance(obj, bytes):
         # For small blobs, base64 encode; for large, just note it's bytes
         if len(obj) < 128:
@@ -470,18 +619,28 @@ def analyze():
         xmp_icc = make_json_serializable(xmp_icc)
         provenance = make_json_serializable(provenance)
 
+        # --- Refined fallback: Use heic_exif if exif is empty, else exif_orig ---
+        if (not exif or len(exif) == 0):
+            if heic_exif and len(heic_exif) > 0:
+                exif = heic_exif.copy()
+            elif exif_orig and len(exif_orig) > 0:
+                exif = exif_orig.copy()
+
         # --- Compose full metadata for LLM and frontend ---
         all_metadata = package_metadata(exif, exif_orig, heic_exif, xmp_icc, provenance, is_ai, ai_reason)
 
-        # --- Modular GPS extraction: try all sources (HEIC EXIF prioritized) ---
+        # --- Modular GPS extraction: try all sources (heic_exif, exif, exif_orig, parsed_gps) ---
         exif_sources = [
             ('heic_exif', heic_exif),
-            ('exif_orig', exif_orig),
             ('exif', exif),
+            ('exif_orig', exif_orig),
         ]
         # Add parsed GPS as dict if available
-        if gps_orig and isinstance(gps_orig, tuple):
-            exif_sources.append(('parse_gps', {'GPSLatitude': gps_orig[0], 'GPSLongitude': gps_orig[1]}))
+        if gps_orig and isinstance(gps_orig, tuple) and len(gps_orig) == 2:
+            parsed_gps = {'lat': gps_orig[0], 'lon': gps_orig[1]}
+            exif_sources.append(('parsed_gps', parsed_gps))
+            
+        # Extract GPS coordinates from available sources
         gps_coords, gps_source = extract_best_gps(exif_sources)
         logger.info(f"Final GPS coordinates sent to frontend: {gps_coords} (source: {gps_source})")
 
@@ -514,16 +673,6 @@ def analyze():
 
         # Data URL
         data_url = f"data:image/{img_format.lower()};base64,{base64.b64encode(raw).decode()}"
-
-        # Enhanced system prompt
-        SYSTEM_PROMPT = (
-            "You are an assistant that pinpoints exactly where a photo was taken. "
-            "Give the most specific location you can (landmarks, city, region). "
-            "If the image appears to be AI-generated or synthetic, or if the metadata suggests this, "
-            "clearly state so and explain your reasoning. Always use both visual cues and ALL available metadata, including EXIF, HEIC EXIF, XMP, ICC, provenance, and AI detection fields. "
-            "If any metadata is present, use it in your answer. If HEIC-specific metadata is present, use it. "
-            "Summarize any provenance or software information you find."
-        )
 
         # Payload (enable streaming)
         payload = {
